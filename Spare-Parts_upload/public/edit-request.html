@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Edit Request</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Arial; padding: 30px; background: #f4f6f9; }
+.container { background: white; padding: 30px; border-radius: 10px; max-width: 950px; margin: auto; }
+h1 { color: #1a3a5c; }
+h2 { color: #1a3a5c; margin-top: 25px; }
+label { font-weight: bold; font-size: 13px; color: #333; display: block; margin-top: 12px; }
+input[type=text], input[type=date], input[type=datetime-local], input[type=number], select, textarea { width: 100%; padding: 9px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; margin-bottom: 5px; font-family: Arial; }
+input[readonly] { background: #f0f0f0; color: #555; cursor: not-allowed; }
+textarea { height: 100px; resize: vertical; }
+.sub-box { background: #f0f4ff; border: 1px solid #c0d0ff; border-radius: 8px; padding: 15px; margin-top: 10px; display: none; }
+.sub-box.active { display: block; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+table th, table td { border: 1px solid #ccc; padding: 7px; text-align: left; }
+table th { background: #1a3a5c; color: white; text-align: center; }
+table td input, table td select { margin: 0; padding: 6px; font-size: 13px; }
+.sig-box { border: 2px dashed #c8a84b; border-radius: 8px; padding: 20px; margin-top: 20px; background: #fffdf0; }
+.sig-box h3 { margin: 0 0 10px; color: #1a3a5c; }
+.btn-submit { padding: 12px 30px; background: #1a3a5c; color: white; border: none; border-radius: 7px; cursor: pointer; font-size: 15px; margin-top: 20px; }
+.btn-submit:hover { background: #0f2a44; }
+.btn-submit:disabled { background: #888; cursor: not-allowed; }
+.btn-add-row { padding: 9px 20px; background: #1e6b3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 10px; }
+.btn-back { display: inline-block; padding: 10px 25px; background: #888; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 20px; text-decoration: none; }
+.search-wrap { position: relative; }
+.search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 5px; max-height: 220px; overflow-y: auto; z-index: 999; display: none; }
+.search-results.active { display: block; }
+.search-result-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; }
+.search-result-item:hover { background: #f0f4ff; }
+.search-result-code { color: #1a3a5c; font-weight: bold; }
+.confirmed-box { background: #e8f5e9; border: 1px solid #4caf50; border-radius: 5px; padding: 10px; margin-top: 8px; font-size: 13px; display: none; }
+.confirmed-box.show { display: block; }
+.custody-wrap { display: flex; gap: 20px; margin-top: 8px; }
+.custody-wrap label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 0; }
+.custody-wrap input[type=radio] { width: auto; margin: 0; }
+.required-star { color: red; }
+.notes-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-top: 20px; }
+.auto-fill-note { font-size: 12px; color: #888; margin-top: 5px; }
+.header { background: #1a3a5c; color: white; padding: 15px 30px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.header a { color: #c8a84b; text-decoration: none; font-weight: bold; }
+.arabic-btn { background: transparent; color: #c8a84b; border: 1px solid #c8a84b; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 13px; transition: all 0.2s; }
+.arabic-btn:hover { background: #c8a84b; color: #1a3a5c; }
+.warning-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin-bottom: 20px; color: #856404; display: none; }
+.warning-box.show { display: block; }
+.error-msg { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 12px; margin-bottom: 15px; display: none; }
+.error-msg.show { display: block; }
+.success-msg { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 12px; margin-bottom: 15px; display: none; }
+.success-msg.show { display: block; }
+.loading-overlay { text-align: center; padding: 40px; color: #888; }
+
+/* Out-of-hours section */
+.outside-hours-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-top: 20px; }
+.outside-hours-box h3 { margin: 0 0 15px; color: #1a3a5c; font-size: 15px; }
+.outside-hours-item { background: white; border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px; margin-top: 10px; }
+.outside-hours-item h4 { margin: 0 0 6px; color: #1a3a5c; font-size: 14px; }
+.outside-hours-item p { margin: 0 0 10px; color: #666; font-size: 13px; }
+.radio-row { display: flex; gap: 15px; }
+.radio-row label { display: flex; align-items: center; gap: 6px; padding: 8px 15px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: normal; margin-top: 0; flex: 1; }
+.radio-row input[type=radio] { width: auto; margin: 0; }
+.datetime-box { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; }
+.datetime-box label { font-weight: bold; font-size: 13px; display: inline; }
+.datetime-box input { width: 100%; padding: 9px; border: 1px solid #ccc; border-radius: 5px; margin-top: 5px; font-size: 14px; font-family: Arial; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <span data-i18n="edit_request.header">Edit & Resubmit Request</span>
+    <div style="display:flex; gap:15px; align-items:center;">
+        <button id="switch-lang-btn" onclick="switchLanguage()" class="arabic-btn">Arabic</button>
+        <a href="/dashboard" id="backToDashboard" data-i18n="common.back_dashboard">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1 data-i18n="edit_request.title">Edit Spare Parts Request</h1>
+    <div id="loadingOverlay" class="loading-overlay" data-i18n="edit_request.loading">Loading request data...</div>
+    <div id="warningMsg" class="warning-box">
+        <strong data-i18n="common.notes_label">Note:</strong> <span id="warningText"></span>
+    </div>
+    <div id="errorMsg" class="error-msg"></div>
+    <div id="successMsg" class="success-msg"></div>
+    <input type="hidden" id="request_id">
+    <div id="formContent" style="display:none;">
+        <label data-i18n="new_request.request_date">Request Date <span class="required-star">*</span></label>
+        <input type="date" id="request_date" required>
+
+        <label data-i18n="new_request.customer_name">Customer Name <span class="required-star">*</span></label>
+        <input type="text" id="customer_name" required>
+
+        <label data-i18n="new_request.customer_code">Customer Code</label>
+        <input type="text" id="customer_code">
+
+        <label data-i18n="new_request.organization">Organization <span class="required-star">*</span></label>
+        <div class="search-wrap">
+            <input type="text" id="org_search" data-i18n="new_request.organization_placeholder" placeholder="Type organization code or name..." autocomplete="off" oninput="searchOrg(this.value)">
+            <div class="search-results" id="org_results"></div>
+        </div>
+        <div class="confirmed-box" id="org_confirmed"></div>
+        <input type="hidden" id="organization_code">
+        <input type="hidden" id="organization_name">
+
+        <label data-i18n="new_request.department">Department Name <span class="required-star">*</span></label>
+        <select id="department_name" required>
+            <option value="" data-i18n="common.select_department">Select Department</option>
+            <option value="Angio">Angio</option>
+            <option value="X-ray">X-ray</option>
+            <option value="CT">CT</option>
+            <option value="MRI">MRI</option>
+            <option value="Konica">Konica</option>
+            <option value="IT">IT</option>
+            <option value="US">US</option>
+            <option value="Projects">Projects</option>
+            <option value="Sales">Sales</option>
+        </select>
+
+        <label data-i18n="new_request.acquisition_type">Acquisition Type <span class="required-star">*</span></label>
+        <select id="acquisition_type" onchange="onAcquisitionChange()" required>
+            <option value="" data-i18n="common.select">Select</option>
+            <option value="Warranty" data-i18n="new_request.acquisition.warranty">Warranty</option>
+            <option value="Service Contract" data-i18n="new_request.acquisition.service_contract">Service Contract</option>
+            <option value="Part Sales" data-i18n="new_request.acquisition.part_sales">Part Sales</option>
+            <option value="Local Repair Parts" data-i18n="new_request.acquisition.local_repair_parts">Local Repair Parts</option>
+            <option value="Tools" data-i18n="new_request.acquisition.tools">Tools</option>
+        </select>
+
+        <div class="sub-box" id="box_warranty">
+            <label data-i18n="new_request.warranty.title">Warranty Type <span class="required-star">*</span></label>
+            <select id="sub_warranty">
+                <option value="" data-i18n="common.select">Select</option>
+                <option value="System Warranty" data-i18n="new_request.warranty.system">System Warranty</option>
+                <option value="Parts Warranty" data-i18n="new_request.warranty.parts">Parts Warranty</option>
+            </select>
+            <label data-i18n="new_request.warranty.install_date">Installation Date <span class="required-star">*</span></label>
+            <input type="date" id="installation_date">
+        </div>
+
+        <div class="sub-box" id="box_service_contract">
+            <label data-i18n="new_request.service_contract.title">Contract Type <span class="required-star">*</span></label>
+            <select id="sub_contract">
+                <option value="" data-i18n="common.select">Select</option>
+                <option value="UPA Contract" data-i18n="new_request.service_contract.upa">UPA Contract</option>
+                <option value="Direct Contract" data-i18n="new_request.service_contract.direct">Direct Contract</option>
+            </select>
+            <label data-i18n="new_request.service_contract.contract_number">Contract Number (Optional)</label>
+            <input type="text" id="contract_number" placeholder="Enter contract number">
+        </div>
+
+        <label data-i18n="new_request.temporary_custody">Temporary Custody</label>
+        <div class="custody-wrap">
+            <label><input type="radio" name="temporary_custody" value="true"> <span data-i18n="new_request.yes">Yes</span></label>
+            <label><input type="radio" name="temporary_custody" value="false" checked> <span data-i18n="new_request.no">No</span></label>
+        </div>
+
+        <h2 data-i18n="new_request.parts">Parts</h2>
+        <table id="parts-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th data-i18n="new_request.part_name">Part Name</th>
+                    <th data-i18n="new_request.part_number">Part Number</th>
+                    <th data-i18n="new_request.po_number">PO Number</th>
+                    <th data-i18n="new_request.qty">QTY</th>
+                    <th data-i18n="new_request.warehouse_location">Warehouse Location</th>
+                    <th data-i18n="new_request.scrap">Scrap</th>
+                </tr>
+            </thead>
+            <tbody id="parts-body"></tbody>
+        </table>
+        <button type="button" class="btn-add-row" onclick="addRow(null)" data-i18n="new_request.add_row">+ Add Row</button>
+
+        <!-- ==================== OUT OF HOURS ==================== -->
+        <div class="outside-hours-box">
+            <h3 data-i18n="new_request.outside_hours.title">⚠️ Warehouse access outside operating hours</h3>
+
+            <div class="outside-hours-item">
+                <h4 data-i18n="new_request.outside_hours.part_release_title">1. Part release</h4>
+                <p data-i18n="new_request.outside_hours.question">Do you need the warehouse opened outside operating hours?</p>
+                <div class="radio-row">
+                    <label><input type="radio" name="out_of_hours_release" value="true" onchange="toggleOutOfHours('release')"> <span data-i18n="new_request.outside_hours.yes">Yes</span></label>
+                    <label><input type="radio" name="out_of_hours_release" value="false" checked onchange="toggleOutOfHours('release')"> <span data-i18n="new_request.outside_hours.no">No</span></label>
+                </div>
+                <div id="release-datetime-box" class="datetime-box" style="display:none;">
+                    <label data-i18n="new_request.outside_hours.date_time_label">Date &amp; Time</label> <span class="required-star">*</span>
+                    <input type="datetime-local" id="out_of_hours_release_datetime">
+                </div>
+            </div>
+
+            <div class="outside-hours-item">
+                <h4 data-i18n="new_request.outside_hours.part_return_title">2. Part return</h4>
+                <p data-i18n="new_request.outside_hours.question">Do you need the warehouse opened outside operating hours?</p>
+                <div class="radio-row">
+                    <label><input type="radio" name="out_of_hours_return" value="true" onchange="toggleOutOfHours('return')"> <span data-i18n="new_request.outside_hours.yes">Yes</span></label>
+                    <label><input type="radio" name="out_of_hours_return" value="false" checked onchange="toggleOutOfHours('return')"> <span data-i18n="new_request.outside_hours.no">No</span></label>
+                </div>
+                <div id="return-datetime-box" class="datetime-box" style="display:none;">
+                    <label data-i18n="new_request.outside_hours.date_time_label">Date &amp; Time</label> <span class="required-star">*</span>
+                    <input type="datetime-local" id="out_of_hours_return_datetime">
+                </div>
+            </div>
+        </div>
+        <!-- ==================== /OUT OF HOURS ==================== -->
+
+        <div class="notes-box">
+            <h3 data-i18n="new_request.notes">Notes (Optional)</h3>
+            <textarea id="notes" data-i18n="new_request.notes_placeholder" placeholder="Add any additional notes here..."></textarea>
+        </div>
+
+        <div class="sig-box" id="sigBox">
+            <h3 data-i18n="new_request.signature.title">Requester Signature</h3>
+            <p data-i18n="new_request.signature.letters_only">Enter your full name as signature (letters only)</p>
+            <input type="text" id="requester_signature" data-i18n="new_request.signature.placeholder" placeholder="Your full name" readonly>
+            <div class="auto-fill-note" data-i18n="common.auto_fill">Your name has been auto-filled and cannot be edited</div>
+        </div>
+
+        <button type="button" class="btn-submit" id="submitBtn" onclick="submitUpdate()" data-i18n="edit_request.update_btn">Update & Resubmit</button>
+        <a href="/dashboard" id="cancelBtn" class="btn-back" data-i18n="common.cancel">Cancel</a>
+    </div>
+</div>
+
+<script src="/js/language.js"></script>
+<script>
+var rowCount = 0;
+var orgConfirmed = false;
+var searchTimer = null;
+window._orgData = [];
+var currentUserBranch = 'Cairo';
+var redirectUrl = '/dashboard';
+var loadedRequestId = null;
+var isManagerMode = false;
+var updateUrl = '';
+
+function switchLanguage() {
+    var targetLang = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar') ? 'en' : 'ar';
+    fetch('/api/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: targetLang })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function () { window.location.reload(); })
+    .catch(function (err) { console.error('Language switch error:', err); window.location.reload(); });
+}
+
+function updateLangButton() {
+    var btn = document.getElementById('switch-lang-btn');
+    if (!btn) return;
+    if (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar') {
+        btn.textContent = 'English';
+        btn.setAttribute('title', 'Switch to English');
+    } else {
+        btn.textContent = 'Arabic';
+        btn.setAttribute('title', 'Switch to Arabic');
+    }
+}
+
+function getQueryParam(name) {
+    var urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toggleOutOfHours(which) {
+    if (which === 'release') {
+        var yes = document.querySelector('input[name="out_of_hours_release"][value="true"]').checked;
+        document.getElementById('release-datetime-box').style.display = yes ? 'block' : 'none';
+    } else if (which === 'return') {
+        var yes = document.querySelector('input[name="out_of_hours_return"][value="true"]').checked;
+        document.getElementById('return-datetime-box').style.display = yes ? 'block' : 'none';
+    }
+}
+
+function showError(msg) {
+    var el = document.getElementById('errorMsg');
+    el.style.display = 'block';
+    el.innerHTML = msg;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function hideError() {
+    var el = document.getElementById('errorMsg');
+    el.style.display = 'none';
+    el.classList.remove('show');
+}
+
+function showSuccess(msg) {
+    var el = document.getElementById('successMsg');
+    el.style.display = 'block';
+    el.innerHTML = msg;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function hideSuccess() {
+    var el = document.getElementById('successMsg');
+    el.style.display = 'none';
+    el.classList.remove('show');
+}
+
+function autoFillSignature() {
+    return fetch('/api/user')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data && data.name) {
+                document.getElementById('requester_signature').value = data.name;
+                if (data.branch) {
+                    currentUserBranch = data.branch;
+                    redirectUrl = (currentUserBranch === 'Alex') ? '/dashboard-alex.html' : '/dashboard';
+                    var backLinks = document.querySelectorAll('#backToDashboard, #cancelBtn');
+                    backLinks.forEach(function(link) { link.href = redirectUrl; });
+                }
+            }
+        })
+        .catch(function(err) { console.log('Auto-fill error:', err); });
+}
+
+function addRow(data) {
+    rowCount++;
+    var tbody = document.getElementById('parts-body');
+    if (!tbody) return;
+
+    var tr = document.createElement('tr');
+    var partName = data ? data.part_name || '' : '';
+    var partNumber = data ? data.part_number || '' : '';
+    var poNumber = data ? data.po_number || '' : '';
+    var quantity = data ? (data.quantity || '') : '';
+    var warehouseLocation = data ? data.warehouse_location || '' : '';
+    var defective = data ? (data.defective_status || 'Y') : 'Y';
+
+    tr.innerHTML = '<td style="text-align:center">' + rowCount + '</td>' +
+        '<td><input type="text" name="part_name_' + rowCount + '" value="' + escapeHtml(partName) + '"></td>' +
+        '<td><input type="text" name="part_number_' + rowCount + '" value="' + escapeHtml(partNumber) + '"></td>' +
+        '<td><input type="text" name="po_number_' + rowCount + '" value="' + escapeHtml(poNumber) + '"></td>' +
+        '<td><input type="number" name="quantity_' + rowCount + '" min="1" value="' + quantity + '"></td>' +
+        '<td><input type="text" name="warehouse_location_' + rowCount + '" value="' + escapeHtml(warehouseLocation) + '"></td>' +
+        '<td><select name="defective_' + rowCount + '"><option value="Y" ' + (defective === 'Y' ? 'selected' : '') + '>Return</option><option value="N" ' + (defective === 'N' ? 'selected' : '') + '>Scrap</option></select></td>';
+    tbody.appendChild(tr);
+}
+
+function loadRequest() {
+    var id = getQueryParam('id');
+    var from = getQueryParam('from');
+    isManagerMode = (from === 'manager');
+
+    if (!id) {
+        showError(translate('edit_request.no_id'));
+        document.getElementById('loadingOverlay').style.display = 'none';
+        return;
+    }
+
+    loadedRequestId = id;
+    document.getElementById('request_id').value = id;
+
+    var viewUrl = isManagerMode ? '/manager/view/' + id : '/requests/view/' + id;
+    updateUrl = isManagerMode ? '/manager/update/' + id : '/requests/update/' + id;
+
+    fetch(viewUrl)
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data || !data.request) throw new Error('Invalid response');
+            var req = data.request;
+            var items = data.items || [];
+
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('formContent').style.display = 'block';
+
+            var warningText = document.getElementById('warningText');
+            if (isManagerMode) {
+                warningText.innerHTML = translate('edit_request.warning_manager');
+            } else if (req.branch === 'Alex') {
+                warningText.innerHTML = translate('edit_request.warning_alex');
+            } else {
+                warningText.innerHTML = translate('edit_request.warning_cairo');
+            }
+
+            if (isManagerMode) document.getElementById('sigBox').style.display = 'none';
+
+            if (req.status === 'Fulfilled') {
+                showError(translate('edit_request.cannot_edit_fulfilled'));
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').textContent = translate('dashboard.buttons.cannot_edit');
+                document.getElementById('warningMsg').classList.remove('show');
+            } else {
+                document.getElementById('warningMsg').classList.add('show');
+            }
+
+            document.getElementById('request_date').value = req.request_date ? String(req.request_date).substring(0, 10) : '';
+            document.getElementById('customer_name').value = req.customer_name || '';
+            document.getElementById('customer_code').value = req.customer_code || '';
+            document.getElementById('organization_code').value = req.organization_code || '';
+            document.getElementById('organization_name').value = req.organization_name || '';
+            document.getElementById('department_name').value = req.department_name || '';
+            document.getElementById('acquisition_type').value = req.acquisition_type || '';
+            document.getElementById('notes').value = req.notes || '';
+
+            var orgCodeVal = req.organization_code || '';
+            var orgNameVal = req.organization_name || '';
+            if (orgCodeVal || orgNameVal) {
+                document.getElementById('org_search').value = orgCodeVal + ' - ' + orgNameVal;
+                document.getElementById('org_confirmed').innerHTML = translate('new_request.confirmed') + ': <b>' + escapeHtml(orgCodeVal) + '</b> - ' + escapeHtml(orgNameVal);
+                document.getElementById('org_confirmed').classList.add('show');
+                orgConfirmed = true;
+            }
+
+            if (req.acquisition_type === 'Warranty') {
+                document.getElementById('box_warranty').classList.add('active');
+                document.getElementById('sub_warranty').value = req.acquisition_sub_type || '';
+                document.getElementById('installation_date').value = req.installation_date2 ? String(req.installation_date2).substring(0, 10) : '';
+            } else if (req.acquisition_type === 'Service Contract') {
+                document.getElementById('box_service_contract').classList.add('active');
+                document.getElementById('sub_contract').value = req.acquisition_sub_type || '';
+                document.getElementById('contract_number').value = req.contract_number || '';
+            }
+
+            if (req.temporary_custody) {
+                document.querySelector('input[name="temporary_custody"][value="true"]').checked = true;
+            } else {
+                document.querySelector('input[name="temporary_custody"][value="false"]').checked = true;
+            }
+
+            // Out-of-hours values
+            if (req.out_of_hours_release) {
+                document.querySelector('input[name="out_of_hours_release"][value="true"]').checked = true;
+                document.getElementById('release-datetime-box').style.display = 'block';
+            } else {
+                document.querySelector('input[name="out_of_hours_release"][value="false"]').checked = true;
+            }
+            if (req.out_of_hours_release_datetime) {
+                document.getElementById('out_of_hours_release_datetime').value =
+                    String(req.out_of_hours_release_datetime).substring(0, 16);
+            }
+
+            if (req.out_of_hours_return) {
+                document.querySelector('input[name="out_of_hours_return"][value="true"]').checked = true;
+                document.getElementById('return-datetime-box').style.display = 'block';
+            } else {
+                document.querySelector('input[name="out_of_hours_return"][value="false"]').checked = true;
+            }
+            if (req.out_of_hours_return_datetime) {
+                document.getElementById('out_of_hours_return_datetime').value =
+                    String(req.out_of_hours_return_datetime).substring(0, 16);
+            }
+
+            rowCount = 0;
+            document.getElementById('parts-body').innerHTML = '';
+            if (items && items.length > 0) {
+                items.forEach(function(item) { addRow(item); });
+            } else {
+                for (var i = 0; i < 3; i++) addRow(null);
+            }
+
+            onAcquisitionChange();
+            if (!isManagerMode) autoFillSignature();
+            hideError();
+        })
+        .catch(function(err) {
+            console.error('Load error:', err);
+            document.getElementById('loadingOverlay').style.display = 'none';
+            showError(translate('common.error') + ': ' + err.message);
+        });
+}
+
+function onAcquisitionChange() {
+    var val = document.getElementById('acquisition_type').value;
+    document.getElementById('box_warranty').classList.remove('active');
+    document.getElementById('box_service_contract').classList.remove('active');
+
+    if (val === 'Warranty') {
+        document.getElementById('box_warranty').classList.add('active');
+        document.getElementById('sub_warranty').required = true;
+        document.getElementById('installation_date').required = true;
+        document.getElementById('sub_contract').required = false;
+    } else if (val === 'Service Contract') {
+        document.getElementById('box_service_contract').classList.add('active');
+        document.getElementById('sub_contract').required = true;
+        document.getElementById('sub_warranty').required = false;
+        document.getElementById('installation_date').required = false;
+    } else {
+        document.getElementById('sub_warranty').required = false;
+        document.getElementById('installation_date').required = false;
+        document.getElementById('sub_contract').required = false;
+    }
+}
+
+function searchOrg(val) {
+    orgConfirmed = false;
+    document.getElementById('organization_code').value = '';
+    document.getElementById('organization_name').value = '';
+    document.getElementById('org_confirmed').classList.remove('show');
+
+    if (val.length < 2) {
+        document.getElementById('org_results').classList.remove('active');
+        return;
+    }
+
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function() {
+        fetch('/requests/contacts/search?term=' + encodeURIComponent(val) + '&account_type=2')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                window._orgData = data || [];
+                renderResults(window._orgData);
+            })
+            .catch(function() {
+                document.getElementById('org_results').classList.remove('active');
+            });
+    }, 300);
+}
+
+function renderResults(data) {
+    var box = document.getElementById('org_results');
+    if (!data || data.length === 0) {
+        box.innerHTML = '<div class="search-result-item" style="color:#888">' + translate('new_request.search_no_results') + '</div>';
+        box.classList.add('active');
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+        var code = String(data[i].Contact_Code || '');
+        var eng = String(data[i].Contact_FullName || '');
+        var ar = String(data[i].Contact_FullNameA || '');
+        var displayName = ar || eng;
+        html += '<div class="search-result-item" onclick="selectOrgByIndex(' + i + ')">' +
+            '<span class="search-result-code">' + escapeHtml(code) + '</span> - ' +
+            escapeHtml(displayName) + '</div>';
+    }
+    box.innerHTML = html;
+    box.classList.add('active');
+}
+
+function selectOrgByIndex(index) {
+    var item = window._orgData[index];
+    if (!item) return;
+
+    var code         = String(item.Contact_Code || '');
+    var englishName  = String(item.Contact_FullName || '');
+    var arabicName   = String(item.Contact_FullNameA || '');
+    var displayName  = arabicName || englishName;
+
+    document.getElementById('org_search').value = code + ' - ' + displayName;
+    document.getElementById('organization_code').value = code;
+    document.getElementById('organization_name').value = displayName;
+    document.getElementById('customer_name').value = displayName;
+    document.getElementById('customer_code').value = code;
+
+    document.getElementById('org_results').classList.remove('active');
+    document.getElementById('org_confirmed').innerHTML = translate('new_request.confirmed') + ': <b>' + escapeHtml(code) + '</b> - ' + escapeHtml(displayName);
+    document.getElementById('org_confirmed').classList.add('show');
+    orgConfirmed = true;
+}
+
+function submitUpdate() {
+    hideError();
+    hideSuccess();
+
+    var requestId = loadedRequestId;
+    if (!requestId) { showError(translate('edit_request.no_id')); return; }
+    if (!orgConfirmed) { showError(translate('new_request.organization') + ': ' + translate('common.required')); return; }
+    if (!document.getElementById('department_name').value) { showError(translate('new_request.department') + ': ' + translate('common.required')); return; }
+
+    var acq = document.getElementById('acquisition_type').value;
+    if (!acq) { showError(translate('new_request.acquisition_type') + ': ' + translate('common.required')); return; }
+
+    if (acq === 'Warranty') {
+        if (!document.getElementById('sub_warranty').value) { showError(translate('new_request.warranty.title') + ': ' + translate('common.required')); return; }
+        if (!document.getElementById('installation_date').value) { showError(translate('new_request.warranty.install_date') + ': ' + translate('common.required')); return; }
+    }
+    if (acq === 'Service Contract') {
+        if (!document.getElementById('sub_contract').value) { showError(translate('new_request.service_contract.title') + ': ' + translate('common.required')); return; }
+    }
+
+    // Out-of-hours validation (translated)
+    var ohReleaseMsg = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar')
+        ? 'يرجى إدخال التاريخ والوقت لصرف القطع خارج أوقات العمل الرسمية.'
+        : 'Please enter the date & time for Part Release outside operating hours.';
+    var ohReturnMsg = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar')
+        ? 'يرجى إدخال التاريخ والوقت لإرجاع القطع خارج أوقات العمل الرسمية.'
+        : 'Please enter the date & time for Part Return outside operating hours.';
+
+    if (document.querySelector('input[name="out_of_hours_release"][value="true"]').checked) {
+        if (!document.getElementById('out_of_hours_release_datetime').value) {
+            showError(ohReleaseMsg);
+            return;
+        }
+    }
+    if (document.querySelector('input[name="out_of_hours_return"][value="true"]').checked) {
+        if (!document.getElementById('out_of_hours_return_datetime').value) {
+            showError(ohReturnMsg);
+            return;
+        }
+    }
+
+    var signature = '';
+    if (!isManagerMode) {
+        signature = document.getElementById('requester_signature').value.trim();
+        if (!signature) { showError(translate('new_request.signature.title') + ': ' + translate('common.required')); return; }
+        if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(signature)) { showError(translate('new_request.signature.letters_only')); return; }
+    } else {
+        signature = 'Manager';
+    }
+
+    var formData = new FormData();
+    formData.append('request_date', document.getElementById('request_date').value);
+    formData.append('customer_name', document.getElementById('customer_name').value);
+    formData.append('customer_code', document.getElementById('customer_code').value);
+    formData.append('organization_code', document.getElementById('organization_code').value);
+    formData.append('organization_name', document.getElementById('organization_name').value);
+    formData.append('department_name', document.getElementById('department_name').value);
+    formData.append('acquisition_type', acq);
+    formData.append('notes', document.getElementById('notes').value);
+    formData.append('requester_signature', signature);
+
+    if (acq === 'Warranty') {
+        formData.append('warranty_sub_type', document.getElementById('sub_warranty').value);
+        formData.append('installation_date', document.getElementById('installation_date').value);
+    } else if (acq === 'Service Contract') {
+        formData.append('contract_sub_type', document.getElementById('sub_contract').value);
+        formData.append('contract_number', document.getElementById('contract_number').value);
+    }
+
+    var custody = document.querySelector('input[name="temporary_custody"]:checked');
+    formData.append('temporary_custody', custody ? custody.value : 'false');
+
+    var ohRel = document.querySelector('input[name="out_of_hours_release"]:checked');
+    formData.append('out_of_hours_release', ohRel ? ohRel.value : 'false');
+    formData.append('out_of_hours_release_datetime', document.getElementById('out_of_hours_release_datetime').value || '');
+
+    var ohRet = document.querySelector('input[name="out_of_hours_return"]:checked');
+    formData.append('out_of_hours_return', ohRet ? ohRet.value : 'false');
+    formData.append('out_of_hours_return_datetime', document.getElementById('out_of_hours_return_datetime').value || '');
+
+    var rows = document.querySelectorAll('#parts-body tr');
+    rows.forEach(function(row, index) {
+        var lineNum = index + 1;
+        var inputs = row.querySelectorAll('input');
+        var select = row.querySelector('select');
+        if (inputs.length >= 5) {
+            var partName = inputs[0].value;
+            var partNumber = inputs[1].value;
+            if (partName || partNumber) {
+                formData.append('part_name_' + lineNum, partName);
+                formData.append('part_number_' + lineNum, partNumber);
+                formData.append('po_number_' + lineNum, inputs[2].value);
+                formData.append('quantity_' + lineNum, inputs[3].value);
+                formData.append('warehouse_location_' + lineNum, inputs[4].value);
+                formData.append('defective_' + lineNum, select ? select.value : 'Y');
+            }
+        }
+    });
+
+    var urlEncoded = new URLSearchParams(formData).toString();
+    var submitBtn = document.getElementById('submitBtn');
+    submitBtn.textContent = translate('common.please_wait');
+    submitBtn.disabled = true;
+
+    fetch(updateUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: urlEncoded
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.json().then(function(d) { throw new Error(d.error || 'HTTP ' + response.status); })
+                .catch(function() { throw new Error('HTTP ' + response.status); });
+        }
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            showSuccess(translate('messages.request_updated'));
+            setTimeout(function() {
+                window.location.href = isManagerMode ? '/department-manager.html' : redirectUrl;
+            }, 3000);
+        } else {
+            showError(data.error || translate('common.error'));
+            submitBtn.textContent = translate('edit_request.update_btn');
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(function(err) {
+        console.error('Submit error:', err);
+        showError(translate('common.error') + ': ' + err.message);
+        submitBtn.textContent = translate('edit_request.update_btn');
+        submitBtn.disabled = false;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var tries = 0;
+    var waitTranslations = setInterval(function() {
+        tries++;
+        if ((typeof translations !== 'undefined' &&
+             translations[currentLanguage] &&
+             Object.keys(translations[currentLanguage]).length > 0) || tries > 30) {
+            clearInterval(waitTranslations);
+            updateLangButton();
+            if (typeof applyTranslations === 'function') applyTranslations();
+        }
+    }, 100);
+
+    fetch('/api/user')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.branch) {
+                currentUserBranch = data.branch;
+                redirectUrl = (currentUserBranch === 'Alex') ? '/dashboard-alex.html' : '/dashboard';
+            }
+            loadRequest();
+        })
+        .catch(function() { loadRequest(); });
+});
+
+document.addEventListener('click', function(e) {
+    var searchWrap = document.querySelector('.search-wrap');
+    if (searchWrap && !searchWrap.contains(e.target)) {
+        document.getElementById('org_results').classList.remove('active');
+    }
+});
+</script>
+</body>
+</html>

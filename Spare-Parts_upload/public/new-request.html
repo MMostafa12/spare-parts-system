@@ -1,0 +1,637 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>New Request</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Arial; padding: 30px; background: #f4f6f9; }
+.container { background: white; padding: 30px; border-radius: 10px; max-width: 950px; margin: auto; }
+h1 { color: #1a3a5c; }
+h2 { color: #1a3a5c; margin-top: 25px; }
+label { font-weight: bold; font-size: 13px; color: #333; display: block; margin-top: 12px; }
+input[type=text], input[type=date], input[type=datetime-local], input[type=number], select, textarea { width: 100%; padding: 9px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; margin-bottom: 5px; font-family: Arial; }
+input[readonly] { background: #f0f0f0; color: #555; cursor: not-allowed; }
+textarea { height: 100px; resize: vertical; }
+.sub-box { background: #f0f4ff; border: 1px solid #c0d0ff; border-radius: 8px; padding: 15px; margin-top: 10px; display: none; }
+.sub-box.active { display: block; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+table th, table td { border: 1px solid #ccc; padding: 7px; }
+table th { background: #1a3a5c; color: white; text-align: center; }
+table td input, table td select { margin: 0; padding: 6px; font-size: 13px; }
+.sig-box { border: 2px dashed #c8a84b; border-radius: 8px; padding: 20px; margin-top: 20px; background: #fffdf0; }
+.sig-box h3 { margin: 0 0 10px; color: #1a3a5c; }
+.btn-submit { padding: 12px 30px; background: #1a3a5c; color: white; border: none; border-radius: 7px; cursor: pointer; font-size: 15px; margin-top: 20px; }
+.btn-submit:hover { background: #0f2a44; }
+.btn-add-row { padding: 9px 20px; background: #1e6b3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 10px; }
+.btn-add-row:hover { background: #155a2e; }
+.search-wrap { position: relative; }
+.search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 5px; max-height: 200px; overflow-y: auto; z-index: 999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 2px; }
+.search-results.active { display: block; }
+.search-results .search-result-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+.search-results .search-result-item:last-child { border-bottom: none; }
+.search-results .search-result-item:hover { background: #f0f4ff; }
+.search-results .search-result-code { color: #1a3a5c; font-weight: bold; }
+.search-results .search-result-name { color: #555; }
+.search-results .search-result-empty { padding: 12px 14px; color: #999; font-size: 13px; text-align: center; }
+.search-results .search-loading { padding: 12px 14px; color: #888; font-size: 13px; text-align: center; }
+.confirmed-box { background: #e8f5e9; border: 1px solid #4caf50; border-radius: 5px; padding: 10px; margin-top: 8px; font-size: 13px; display: none; color: #2e7d32; }
+.confirmed-box.show { display: block; }
+.custody-wrap { display: flex; gap: 20px; margin-top: 8px; }
+.custody-wrap label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 0; }
+.custody-wrap input[type=radio] { width: auto; margin: 0; }
+.required-star { color: red; }
+.notes-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-top: 20px; }
+.notes-box h3 { margin: 0 0 10px; color: #1a3a5c; font-size: 15px; }
+.auto-fill-note { font-size: 12px; color: #888; margin-top: 5px; }
+.branch-note { font-size: 12px; margin-top: 5px; font-weight: normal; }
+.branch-note.alex { color: #4a90d9; }
+.header { background: #1a3a5c; color: white; padding: 15px 30px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.header a { color: #c8a84b; text-decoration: none; font-weight: bold; }
+.header a:hover { color: #e0c86b; }
+.header .header-buttons { display: flex; gap: 20px; align-items: center; }
+.language-toggle { background: transparent; color: #c8a84b; border: 1px solid #c8a84b; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.language-toggle:hover { background: #c8a84b; color: #1a3a5c; }
+.part-cell { position: relative; }
+.part-cell .picker-arrow { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: #f0f4ff; border: 1px solid #c0d0ff; color: #1a3a5c; width: 22px; height: 22px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+.part-cell .picker-arrow:hover { background: #d0e0ff; }
+.part-cell input { padding-right: 30px !important; }
+.item-picker-panel { position: absolute; top: 100%; left: 0; min-width: 350px; max-width: 500px; background: white; border: 2px solid #1a3a5c; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); z-index: 10000; max-height: 300px; overflow-y: auto; display: none; }
+.item-picker-panel.show { display: block; }
+.item-picker-panel .picker-search { padding: 8px; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 1; }
+.item-picker-panel .picker-search input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; margin: 0; }
+.item-picker-panel .picker-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f5f5f5; font-size: 12px; line-height: 1.4; }
+.item-picker-panel .picker-item:hover { background: #f0f4ff; }
+.item-picker-panel .picker-item .code { color: #1a3a5c; font-weight: bold; display: block; margin-bottom: 2px; }
+.item-picker-panel .picker-item .name { color: #555; }
+.item-picker-panel .picker-empty { padding: 12px; color: #999; text-align: center; font-size: 13px; }
+.item-picker-panel .picker-loading { padding: 12px; color: #888; text-align: center; font-size: 13px; }
+
+/* Out-of-hours section */
+.outside-hours-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-top: 20px; }
+.outside-hours-box h3 { margin: 0 0 15px; color: #1a3a5c; font-size: 15px; }
+.outside-hours-item { background: white; border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px; margin-top: 10px; }
+.outside-hours-item h4 { margin: 0 0 6px; color: #1a3a5c; font-size: 14px; }
+.outside-hours-item p { margin: 0 0 10px; color: #666; font-size: 13px; }
+.radio-row { display: flex; gap: 15px; }
+.radio-row label { display: flex; align-items: center; gap: 6px; padding: 8px 15px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: normal; margin-top: 0; flex: 1; }
+.radio-row input[type=radio] { width: auto; margin: 0; }
+.datetime-box { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; }
+.datetime-box label { font-weight: bold; font-size: 13px; display: inline; }
+.datetime-box input { width: 100%; padding: 9px; border: 1px solid #ccc; border-radius: 5px; margin-top: 5px; font-size: 14px; font-family: Arial; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <span data-i18n="app_title">Spare Parts System</span>
+    <div class="header-buttons">
+        <button id="language-toggle" onclick="toggleLanguage()" class="language-toggle">🌐 العربية</button>
+        <a href="/change-password" data-i18n="common.change_password">🔑 Change Password</a>
+        <a href="/logout" data-i18n="common.logout">Logout</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1 data-i18n="new_request.title">Create Spare Parts Request</h1>
+    <form method="POST" action="/requests/submit" onsubmit="return validateForm()">
+        <label data-i18n="new_request.request_date">Request Date <span class="required-star">*</span></label>
+        <input type="date" name="request_date" required>
+
+        <label data-i18n="new_request.customer_name">Customer Name <span class="required-star">*</span></label>
+        <input type="text" name="customer_name" id="customer_name" required>
+
+        <label data-i18n="new_request.customer_code">Customer Code</label>
+        <input type="text" name="customer_code" id="customer_code">
+
+        <label data-i18n="new_request.organization">Organization <span class="required-star">*</span></label>
+        <div class="search-wrap">
+            <input type="text" id="org_search" data-i18n="new_request.organization_placeholder" placeholder="Type organization code or name..." autocomplete="off" oninput="searchOrg(this.value)">
+            <div class="search-results" id="org_results"></div>
+        </div>
+        <div class="confirmed-box" id="org_confirmed">✅ <span id="org_confirmed_text"></span></div>
+        <input type="hidden" name="organization_code" id="organization_code">
+        <input type="hidden" name="organization_name" id="organization_name">
+
+        <label data-i18n="new_request.department">Department Name <span class="required-star">*</span></label>
+        <select name="department_name" id="department_name" required>
+            <option value="" data-i18n="common.select_department">— Select Department —</option>
+            <option value="Angio">Angio</option>
+            <option value="X-ray">X-ray</option>
+            <option value="CT">CT</option>
+            <option value="MRI">MRI</option>
+            <option value="Konica">Konica</option>
+            <option value="IT">IT</option>
+            <option value="US">US</option>
+            <option value="Projects">Projects</option>
+            <option value="Sales">Sales</option>
+        </select>
+
+        <label>Branch</label>
+        <input type="text" id="branch" value="Cairo" disabled style="background: #f0f0f0; color: #555; cursor: not-allowed; width: 100%; padding: 9px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px;">
+        <div class="auto-fill-note branch-note" id="branchNote">💡 Branch is auto-filled from your profile</div>
+
+        <label data-i18n="new_request.acquisition_type">Acquisition Type <span class="required-star">*</span></label>
+        <select name="acquisition_type" id="acquisition_type" onchange="onAcquisitionChange()" required>
+            <option value="" data-i18n="common.select">— Select —</option>
+            <option value="Warranty" data-i18n="new_request.acquisition.warranty">Warranty</option>
+            <option value="Service Contract" data-i18n="new_request.acquisition.service_contract">Service Contract</option>
+            <option value="Part Sales" data-i18n="new_request.acquisition.part_sales">Part Sales</option>
+            <option value="Local Repair Parts" data-i18n="new_request.acquisition.local_repair_parts">Local Repair Parts</option>
+            <option value="Tools" data-i18n="new_request.acquisition.tools">Tools</option>
+        </select>
+
+        <div class="sub-box" id="box_warranty">
+            <label data-i18n="new_request.warranty.title">Warranty Type <span class="required-star">*</span></label>
+            <select id="sub_warranty" name="warranty_sub_type">
+                <option value="" data-i18n="common.select">— Select —</option>
+                <option value="System Warranty" data-i18n="new_request.warranty.system">System Warranty</option>
+                <option value="Parts Warranty" data-i18n="new_request.warranty.parts">Parts Warranty</option>
+            </select>
+            <label data-i18n="new_request.warranty.install_date">Installation Date <span class="required-star">*</span></label>
+            <input type="date" id="installation_date" name="installation_date">
+        </div>
+
+        <div class="sub-box" id="box_service_contract">
+            <label data-i18n="new_request.service_contract.title">Contract Type <span class="required-star">*</span></label>
+            <select id="sub_contract" name="contract_sub_type">
+                <option value="" data-i18n="common.select">— Select —</option>
+                <option value="UPA Contract" data-i18n="new_request.service_contract.upa">UPA Contract</option>
+                <option value="Direct Contract" data-i18n="new_request.service_contract.direct">Direct Contract</option>
+            </select>
+            <label data-i18n="new_request.service_contract.contract_number">Contract Number <span style="color:#888;font-size:12px;font-weight:normal;">(Optional)</span></label>
+            <input type="text" id="contract_number" name="contract_number" placeholder="Enter contract number (optional)">
+        </div>
+
+        <label data-i18n="new_request.temporary_custody">Temporary Custody (عهدة)</label>
+        <div class="custody-wrap">
+            <label><input type="radio" name="temporary_custody" value="true"> <span data-i18n="new_request.yes">Yes</span></label>
+            <label><input type="radio" name="temporary_custody" value="false" checked> <span data-i18n="new_request.no">No</span></label>
+        </div>
+
+        <h2 data-i18n="new_request.parts">Parts</h2>
+        <table id="parts-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th data-i18n="new_request.part_name">Part Name</th>
+                    <th data-i18n="new_request.part_number">Part Number</th>
+                    <th data-i18n="new_request.po_number">PO Number</th>
+                    <th data-i18n="new_request.qty">QTY</th>
+                    <th data-i18n="new_request.warehouse_location">Warehouse Location</th>
+                    <th data-i18n="new_request.scrap">Scrap</th>
+                </tr>
+            </thead>
+            <tbody id="parts-body"></tbody>
+        </table>
+        <button type="button" class="btn-add-row" onclick="addRow()" data-i18n="new_request.add_row">+ Add Row</button>
+
+        <!-- ==================== OUT OF HOURS ==================== -->
+        <div class="outside-hours-box">
+            <h3 data-i18n="new_request.outside_hours.title">⚠️ Warehouse access outside operating hours</h3>
+
+            <div class="outside-hours-item">
+                <h4 data-i18n="new_request.outside_hours.part_release_title">1. Part release</h4>
+                <p data-i18n="new_request.outside_hours.question">Do you need the warehouse opened outside operating hours?</p>
+                <div class="radio-row">
+                    <label><input type="radio" name="out_of_hours_release" value="true" onchange="toggleOutOfHours('release')"> <span data-i18n="new_request.outside_hours.yes">Yes</span></label>
+                    <label><input type="radio" name="out_of_hours_release" value="false" checked onchange="toggleOutOfHours('release')"> <span data-i18n="new_request.outside_hours.no">No</span></label>
+                </div>
+                <div id="release-datetime-box" class="datetime-box" style="display:none;">
+                    <label data-i18n="new_request.outside_hours.date_time_label">Date &amp; Time</label> <span class="required-star">*</span>
+                    <input type="datetime-local" name="out_of_hours_release_datetime" id="out_of_hours_release_datetime">
+                </div>
+            </div>
+
+            <div class="outside-hours-item">
+                <h4 data-i18n="new_request.outside_hours.part_return_title">2. Part return</h4>
+                <p data-i18n="new_request.outside_hours.question">Do you need the warehouse opened outside operating hours?</p>
+                <div class="radio-row">
+                    <label><input type="radio" name="out_of_hours_return" value="true" onchange="toggleOutOfHours('return')"> <span data-i18n="new_request.outside_hours.yes">Yes</span></label>
+                    <label><input type="radio" name="out_of_hours_return" value="false" checked onchange="toggleOutOfHours('return')"> <span data-i18n="new_request.outside_hours.no">No</span></label>
+                </div>
+                <div id="return-datetime-box" class="datetime-box" style="display:none;">
+                    <label data-i18n="new_request.outside_hours.date_time_label">Date &amp; Time</label> <span class="required-star">*</span>
+                    <input type="datetime-local" name="out_of_hours_return_datetime" id="out_of_hours_return_datetime">
+                </div>
+            </div>
+        </div>
+        <!-- ==================== /OUT OF HOURS ==================== -->
+
+        <div class="notes-box">
+            <h3 data-i18n="new_request.notes">Notes (Optional)</h3>
+            <textarea name="notes" data-i18n="new_request.notes_placeholder" placeholder="Add any additional notes here..."></textarea>
+        </div>
+
+        <div class="sig-box">
+            <h3 data-i18n="new_request.signature.title">✍ Requester Signature</h3>
+            <p data-i18n="new_request.signature.letters_only">Enter your full name as signature (letters only)</p>
+            <input type="text" name="requester_signature" id="requester_signature" data-i18n="new_request.signature.placeholder" placeholder="Your full name" required>
+            <div class="auto-fill-note" data-i18n="new_request.signature.auto_fill">💡 Your name from the system will be auto-filled</div>
+        </div>
+
+        <button type="submit" class="btn-submit" data-i18n="new_request.submit">Submit Request</button>
+    </form>
+</div>
+
+<script src="/js/language.js"></script>
+<script>
+var rowCount = 0;
+var orgConfirmed = false;
+var searchTimer = null;
+window._orgData = [];
+
+var mierpItems = null;
+var mierpItemsLoading = false;
+var mierpItemsCallbacks = [];
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toggleOutOfHours(which) {
+    if (which === 'release') {
+        var yes = document.querySelector('input[name="out_of_hours_release"][value="true"]').checked;
+        document.getElementById('release-datetime-box').style.display = yes ? 'block' : 'none';
+    } else if (which === 'return') {
+        var yes = document.querySelector('input[name="out_of_hours_return"][value="true"]').checked;
+        document.getElementById('return-datetime-box').style.display = yes ? 'block' : 'none';
+    }
+}
+
+function loadMierpItems(callback) {
+    if (mierpItems) { callback(mierpItems); return; }
+    mierpItemsCallbacks.push(callback);
+    if (mierpItemsLoading) return;
+    mierpItemsLoading = true;
+
+    fetch('/requests/items/search')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            mierpItems = data || [];
+            mierpItemsCallbacks.forEach(function(cb) { cb(mierpItems); });
+            mierpItemsCallbacks = [];
+            mierpItemsLoading = false;
+        })
+        .catch(function(err) {
+            console.error('Failed to load items:', err);
+            mierpItems = [];
+            mierpItemsCallbacks.forEach(function(cb) { cb(mierpItems); });
+            mierpItemsCallbacks = [];
+            mierpItemsLoading = false;
+        });
+}
+
+function autoFillBranch() {
+    fetch('/api/user')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data && data.branch) {
+                var branchField = document.getElementById('branch');
+                var note = document.getElementById('branchNote');
+                if (branchField) {
+                    branchField.value = data.branch;
+                    if (data.branch === 'Alex') {
+                        if (note) {
+                            note.innerHTML = translate('new_request.branch_auto_fill_alex');
+                            note.className = 'auto-fill-note branch-note alex';
+                        }
+                    } else {
+                        if (note) {
+                            note.innerHTML = translate('new_request.branch_auto_fill');
+                            note.className = 'auto-fill-note branch-note';
+                        }
+                    }
+                }
+            }
+        })
+        .catch(function(err) { console.log('Could not auto-fill branch:', err); });
+}
+
+function autoFillSignature() {
+    fetch('/api/user')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data && data.name) {
+                var sigField = document.getElementById('requester_signature');
+                if (sigField) sigField.value = data.name;
+            }
+        })
+        .catch(function(err) { console.log('Could not auto-fill signature:', err); });
+}
+
+function addRow() {
+    rowCount++;
+    var tbody = document.getElementById('parts-body');
+    var tr = document.createElement('tr');
+
+    tr.innerHTML =
+        '<td style="text-align:center">' + rowCount + '</td>' +
+        '<td class="part-cell">' +
+            '<input type="text" name="part_name_' + rowCount + '" id="part_name_' + rowCount + '" placeholder="' + translate('new_request.type_or_pick') + '" autocomplete="off">' +
+            '<button type="button" class="picker-arrow" onclick="openItemPicker(' + rowCount + ', \'name\')" title="' + translate('new_request.pick_from_list') + '">▾</button>' +
+        '</td>' +
+        '<td class="part-cell">' +
+            '<input type="text" name="part_number_' + rowCount + '" id="part_number_' + rowCount + '" placeholder="' + translate('new_request.type_or_pick') + '" autocomplete="off">' +
+            '<button type="button" class="picker-arrow" onclick="openItemPicker(' + rowCount + ', \'code\')" title="' + translate('new_request.pick_from_list') + '">▾</button>' +
+        '</td>' +
+        '<td><input type="text" name="po_number_' + rowCount + '"></td>' +
+        '<td><input type="number" name="quantity_' + rowCount + '" min="1"></td>' +
+        '<td><input type="text" name="warehouse_location_' + rowCount + '" placeholder="e.g., Aisle 3, Shelf 2"></td>' +
+        '<td><select name="defective_' + rowCount + '"><option value="Y">Return</option><option value="N">Scrap</option></select></td>';
+
+    tbody.appendChild(tr);
+}
+
+function openItemPicker(rowNum, field) {
+    closeAllPickers();
+    var inputId = (field === 'name') ? 'part_name_' + rowNum : 'part_number_' + rowNum;
+    var inputEl = document.getElementById(inputId);
+    if (!inputEl) return;
+
+    var panel = document.createElement('div');
+    panel.className = 'item-picker-panel show';
+    panel.id = 'picker-panel-' + rowNum + '-' + field;
+    panel.innerHTML =
+        '<div class="picker-search">' +
+            '<input type="text" placeholder="' + translate('new_request.picker_search') + '" oninput="filterPicker(this.value, ' + rowNum + ', \'' + field + '\')" onclick="event.stopPropagation()">' +
+        '</div>' +
+        '<div class="picker-list" id="picker-list-' + rowNum + '-' + field + '">' +
+            '<div class="picker-loading">' + translate('new_request.picker_loading') + '</div>' +
+        '</div>';
+
+    var cell = inputEl.parentElement;
+    cell.style.position = 'relative';
+    cell.appendChild(panel);
+
+    setTimeout(function() {
+        var searchBox = panel.querySelector('.picker-search input');
+        if (searchBox) searchBox.focus();
+    }, 50);
+
+    loadMierpItems(function(items) { renderPickerItems(items, rowNum, field, ''); });
+}
+
+function renderPickerItems(items, rowNum, field, filter) {
+    var listEl = document.getElementById('picker-list-' + rowNum + '-' + field);
+    if (!listEl) return;
+    var f = (filter || '').toLowerCase().trim();
+    var filtered = items;
+    if (f) {
+        filtered = items.filter(function(it) {
+            return (it.code || '').toLowerCase().indexOf(f) !== -1
+                || (it.name || '').toLowerCase().indexOf(f) !== -1;
+        });
+    }
+    filtered = filtered.slice(0, 300);
+    if (!filtered.length) {
+        listEl.innerHTML = '<div class="picker-empty">' + translate('new_request.picker_empty') + '</div>';
+        return;
+    }
+    var html = '';
+    filtered.forEach(function(it, idx) {
+        html += '<div class="picker-item" onclick="selectPickerItem(' + rowNum + ', \'' + field + '\', ' + idx + ')">' +
+            '<span class="code">' + escapeHtml(it.code) + '</span>' +
+            '<span class="name">' + escapeHtml(it.name) + '</span>' +
+            '</div>';
+    });
+    listEl.innerHTML = html;
+    listEl._filteredItems = filtered;
+}
+
+function filterPicker(value, rowNum, field) {
+    var listEl = document.getElementById('picker-list-' + rowNum + '-' + field);
+    if (!listEl || !mierpItems) return;
+    renderPickerItems(mierpItems, rowNum, field, value);
+}
+
+function selectPickerItem(rowNum, field, idx) {
+    var listEl = document.getElementById('picker-list-' + rowNum + '-' + field);
+    if (!listEl || !listEl._filteredItems) return;
+    var item = listEl._filteredItems[idx];
+    if (!item) return;
+    var nameInput = document.getElementById('part_name_' + rowNum);
+    var codeInput = document.getElementById('part_number_' + rowNum);
+    if (nameInput) nameInput.value = item.name || '';
+    if (codeInput) codeInput.value = item.code || '';
+    closeAllPickers();
+}
+
+function closeAllPickers() {
+    var pickers = document.querySelectorAll('.item-picker-panel');
+    pickers.forEach(function(p) { p.remove(); });
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.item-picker-panel') && !e.target.closest('.picker-arrow')) {
+        closeAllPickers();
+    }
+    var searchWrap = document.querySelector('.search-wrap');
+    if (searchWrap && !searchWrap.contains(e.target)) {
+        hideResults();
+    }
+});
+
+function onAcquisitionChange() {
+    var val = document.getElementById('acquisition_type').value;
+    var boxWarranty = document.getElementById('box_warranty');
+    var boxService = document.getElementById('box_service_contract');
+    var subWarranty = document.getElementById('sub_warranty');
+    var installationDate = document.getElementById('installation_date');
+    var subContract = document.getElementById('sub_contract');
+    var contractNumber = document.getElementById('contract_number');
+
+    boxWarranty.classList.remove('active');
+    boxService.classList.remove('active');
+
+    if (val === 'Warranty') {
+        boxWarranty.classList.add('active');
+        subWarranty.required = true;
+        installationDate.required = true;
+        subContract.required = false;
+        contractNumber.required = false;
+    } else if (val === 'Service Contract') {
+        boxService.classList.add('active');
+        subContract.required = true;
+        contractNumber.required = false;
+        subWarranty.required = false;
+        installationDate.required = false;
+    } else {
+        subWarranty.required = false;
+        installationDate.required = false;
+        subContract.required = false;
+        contractNumber.required = false;
+    }
+}
+
+function searchOrg(val) {
+    orgConfirmed = false;
+    document.getElementById('organization_code').value = '';
+    document.getElementById('organization_name').value = '';
+    document.getElementById('org_confirmed').classList.remove('show');
+
+    var resultsBox = document.getElementById('org_results');
+
+    if (val.length < 2) {
+        resultsBox.style.display = 'none';
+        resultsBox.classList.remove('active');
+        return;
+    }
+
+    resultsBox.innerHTML = '<div class="search-loading">' + translate('new_request.search_loading') + '</div>';
+    resultsBox.style.display = 'block';
+    resultsBox.classList.add('active');
+
+    if (window.searchTimer) clearTimeout(window.searchTimer);
+
+    window.searchTimer = setTimeout(function() {
+        fetch('/requests/contacts/search?term=' + encodeURIComponent(val) + '&account_type=2')
+            .then(function(response) {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(function(data) {
+                window._orgData = data || [];
+                if (!data || data.length === 0) {
+                    resultsBox.innerHTML = '<div class="search-result-empty">' + translate('new_request.search_no_results') + '</div>';
+                    resultsBox.style.display = 'block';
+                    resultsBox.classList.add('active');
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    var code = String(item.Contact_Code || '');
+                    var englishName = String(item.Contact_FullName || '');
+                    var arabicName = String(item.Contact_FullNameA || '');
+                    var displayName = arabicName || englishName;
+                    html += '<div class="search-result-item" onclick="selectOrgByIndex(' + i + ')">' +
+                        '<span class="search-result-code">' + escapeHtml(code) + '</span> — ' +
+                        '<span class="search-result-name">' + escapeHtml(displayName) + '</span>' +
+                        '</div>';
+                }
+                resultsBox.innerHTML = html;
+                resultsBox.style.display = 'block';
+                resultsBox.classList.add('active');
+            })
+            .catch(function(err) {
+                console.error('Search error:', err);
+                resultsBox.innerHTML = '<div class="search-result-empty">' + translate('new_request.search_error') + '</div>';
+                resultsBox.style.display = 'block';
+                resultsBox.classList.add('active');
+            });
+    }, 400);
+}
+
+function selectOrgByIndex(index) {
+    var item = window._orgData[index];
+    if (!item) return;
+
+    var code         = String(item.Contact_Code || '');
+    var englishName  = String(item.Contact_FullName || '');
+    var arabicName   = String(item.Contact_FullNameA || '');
+    var displayName  = arabicName || englishName;
+
+    document.getElementById('org_search').value = code + ' — ' + displayName;
+    document.getElementById('organization_code').value = code;
+    document.getElementById('organization_name').value = displayName;
+    document.getElementById('customer_name').value = displayName;
+    document.getElementById('customer_code').value = code;
+
+    hideResults();
+
+    document.getElementById('org_confirmed_text').innerHTML =
+        translate('new_request.confirmed') + ': <b>' + escapeHtml(code) + '</b> — ' + escapeHtml(displayName);
+    document.getElementById('org_confirmed').classList.add('show');
+    orgConfirmed = true;
+}
+
+function hideResults() {
+    var resultsBox = document.getElementById('org_results');
+    if (resultsBox) {
+        resultsBox.style.display = 'none';
+        resultsBox.classList.remove('active');
+    }
+}
+
+function validateForm() {
+    if (!orgConfirmed) {
+        alert(translate('new_request.organization') + ': ' + translate('common.required'));
+        document.getElementById('org_search').focus();
+        return false;
+    }
+    if (!document.getElementById('department_name').value) {
+        alert(translate('new_request.department') + ': ' + translate('common.required'));
+        return false;
+    }
+    var acq = document.getElementById('acquisition_type').value;
+    if (!acq) {
+        alert(translate('new_request.acquisition_type') + ': ' + translate('common.required'));
+        return false;
+    }
+    if (acq === 'Warranty') {
+        if (!document.getElementById('sub_warranty').value) {
+            alert(translate('new_request.warranty.title') + ': ' + translate('common.required'));
+            return false;
+        }
+        if (!document.getElementById('installation_date').value) {
+            alert(translate('new_request.warranty.install_date') + ': ' + translate('common.required'));
+            return false;
+        }
+    }
+    if (acq === 'Service Contract') {
+        if (!document.getElementById('sub_contract').value) {
+            alert(translate('new_request.service_contract.title') + ': ' + translate('common.required'));
+            return false;
+        }
+    }
+
+    // Out-of-hours validation
+    var ohReleaseMsg = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar')
+        ? 'يرجى إدخال التاريخ والوقت لصرف القطع خارج أوقات العمل الرسمية.'
+        : 'Please enter the date & time for Part Release outside operating hours.';
+    var ohReturnMsg = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar')
+        ? 'يرجى إدخال التاريخ والوقت لإرجاع القطع خارج أوقات العمل الرسمية.'
+        : 'Please enter the date & time for Part Return outside operating hours.';
+
+    if (document.querySelector('input[name="out_of_hours_release"][value="true"]').checked) {
+        if (!document.getElementById('out_of_hours_release_datetime').value) {
+            alert(ohReleaseMsg);
+            return false;
+        }
+    }
+    if (document.querySelector('input[name="out_of_hours_return"][value="true"]').checked) {
+        if (!document.getElementById('out_of_hours_return_datetime').value) {
+            alert(ohReturnMsg);
+            return false;
+        }
+    }
+
+    var signature = document.querySelector('input[name="requester_signature"]');
+    if (!signature) return false;
+    var sigValue = signature.value.trim();
+    if (!sigValue) {
+        alert(translate('new_request.signature.title') + ': ' + translate('common.required'));
+        return false;
+    }
+    if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(sigValue)) {
+        alert(translate('new_request.signature.letters_only'));
+        return false;
+    }
+    return true;
+}
+
+for (var i = 0; i < 5; i++) { addRow(); }
+autoFillBranch();
+autoFillSignature();
+
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (typeof applyTranslations === 'function') applyTranslations();
+        if (typeof updateLanguageButton === 'function') updateLanguageButton();
+    }, 500);
+});
+</script>
+</body>
+</html>

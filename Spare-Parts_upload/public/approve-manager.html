@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Manager Panel</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Arial; background: #f4f6f9; padding: 30px; }
+.header { background: #1a3a5c; color: white; padding: 20px 30px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.header a { color: #c8a84b; text-decoration: none; font-weight: bold; }
+.header .header-buttons { display: flex; gap: 20px; align-items: center; }
+.header .header-buttons a { color: #c8a84b; text-decoration: none; font-weight: bold; }
+.header .header-buttons a:hover { color: #e0c86b; }
+.language-toggle { background: transparent; color: #c8a84b; border: 1px solid #c8a84b; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.language-toggle:hover { background: #c8a84b; color: #1a3a5c; }
+.filter-box { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+.filter-box label { font-weight: bold; font-size: 12px; color: #333; display: block; margin-bottom: 4px; }
+.filter-box input, .filter-box select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; width: 160px; }
+.btn-filter { background: #1a3a5c; color: white; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; }
+.btn-filter:hover { background: #0f2a44; }
+.btn-clear { background: #888; color: white; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; margin-left: 8px; }
+.btn-clear:hover { background: #666; }
+.card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.card h3 { margin: 0 0 5px; color: #1a3a5c; }
+.card p { margin: 3px 0; color: #555; font-size: 14px; }
+h4 { color: #1a3a5c; margin-top: 20px; margin-bottom: 8px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+th { background: #1a3a5c; color: white; padding: 8px; text-align: left; }
+td { padding: 8px; border: 1px solid #ddd; }
+.status-bar { display: flex; align-items: center; margin-top: 15px; }
+.step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.step-circle { width: 32px; height: 32px; border-radius: 50%; background: #ddd; color: #999; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 3px solid #ddd; }
+.step-circle.done { background: #1e6b3c; color: white; border-color: #1e6b3c; }
+.step-circle.active { background: #c8a84b; color: white; border-color: #c8a84b; }
+.step-circle.rejected { background: #8b1a1a; color: white; border-color: #8b1a1a; }
+.step-circle.manager-step { background: #9b59b6; color: white; border-color: #9b59b6; }
+.step-label { font-size: 11px; margin-top: 4px; color: #888; text-align: center; }
+.step-label.done { color: #1e6b3c; font-weight: bold; }
+.step-label.active { color: #c8a84b; font-weight: bold; }
+.step-label.rejected { color: #8b1a1a; font-weight: bold; }
+.step-label.manager-step { color: #9b59b6; font-weight: bold; }
+.step-line { height: 4px; flex: 1; background: #ddd; margin-bottom: 18px; }
+.step-line.done { background: #1e6b3c; }
+.step-line.manager-step { background: #9b59b6; }
+.btn-view { background: #1a3a5c; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 10px; }
+.btn-view:hover { background: #0f2a44; }
+.btn-print { background: #6c3483; color: white; padding: 8px 18px; border-radius: 6px; font-size: 13px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; margin-right: 10px; }
+.btn-print:hover { background: #552b66; }
+.reject-details { background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px; padding: 12px; margin: 15px 0; color: #8b1a1a; font-size: 13px; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; overflow-y: auto; }
+.modal-box { background: white; max-width: 800px; margin: 40px auto; border-radius: 12px; padding: 30px; position: relative; }
+.modal-close { position: absolute; top: 15px; right: 15px; background: #c00; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+.modal-close:hover { background: #900; }
+.notes-display { background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; padding: 12px; font-size: 14px; color: #555; }
+.override-box { border: 2px dashed #c8a84b; border-radius: 8px; padding: 15px; margin-top: 15px; background: #fffdf0; }
+.override-box h5 { margin: 0 0 8px; color: #1a3a5c; }
+.override-box input, .override-box textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-top: 6px; font-size: 13px; }
+input[readonly] { background: #f0f0f0; color: #555; cursor: not-allowed; }
+.override-box textarea { height: 60px; resize: vertical; }
+.btn-override { background: #c8a84b; color: #1a3a5c; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 8px; font-weight: bold; }
+.btn-override:hover { background: #b8943a; }
+.override-msg { margin-top: 6px; font-size: 13px; font-weight: bold; }
+.override-msg.error { color: red; }
+.override-msg.success { color: #1e6b3c; }
+.manager-sig-info { background: #fffdf0; border: 1px solid #c8a84b; border-radius: 6px; padding: 8px; margin-top: 5px; font-size: 12px; color: #856404; }
+.auto-fill-note { font-size: 12px; color: #888; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <span data-i18n="app_title">Spare Parts System</span>
+    <div class="header-buttons">
+        <button id="language-toggle" onclick="toggleLanguage()" class="language-toggle">🌐 العربية</button>
+        <a href="/change-password" data-i18n="common.change_password">🔑 Change Password</a>
+        <a href="/logout" data-i18n="common.logout">Logout</a>
+    </div>
+</div>
+
+<div class="filter-box">
+    <div><label data-i18n="dashboard.filter.search">Search by Name</label><input type="text" id="filter_name" placeholder="Organization name..."></div>
+    <div><label data-i18n="dashboard.filter.department">Department</label><select id="filter_dept">
+        <option value="" data-i18n="common.all">All Departments</option>
+        <option value="Angio">Angio</option>
+        <option value="X-ray">X-ray</option>
+        <option value="CT">CT</option>
+        <option value="MRI">MRI</option>
+        <option value="Konica">Konica</option>
+        <option value="IT">IT</option>
+        <option value="US">US</option>
+        <option value="Projects">Projects</option>
+        <option value="Sales">Sales</option>
+    </select></div>
+    <div><label data-i18n="dashboard.filter.from_date">From Date</label><input type="date" id="filter_from"></div>
+    <div><label data-i18n="dashboard.filter.to_date">To Date</label><input type="date" id="filter_to"></div>
+    <div><label data-i18n="dashboard.filter.status">Status</label><select id="filter_status">
+        <option value="" data-i18n="common.all">All</option>
+        <option value="Pending Dept Manager" data-i18n="dashboard.statuses.pending_dept_manager">Pending Dept Manager</option>
+        <option value="Pending Service" data-i18n="dashboard.statuses.pending_service">Pending Service</option>
+        <option value="Pending Finance" data-i18n="dashboard.statuses.pending_finance">Pending Finance</option>
+        <option value="Pending Warehouse" data-i18n="dashboard.statuses.pending_warehouse">Pending Warehouse</option>
+        <option value="Fulfilled" data-i18n="dashboard.statuses.fulfilled">Fulfilled</option>
+        <option value="Rejected by Dept Manager" data-i18n="dashboard.statuses.rejected_by_dept_manager">Rejected by Dept Manager</option>
+        <option value="Rejected by Service" data-i18n="dashboard.statuses.rejected_by_service">Rejected by Service</option>
+        <option value="Rejected by Finance" data-i18n="dashboard.statuses.rejected_by_finance">Rejected by Finance</option>
+        <option value="Rejected by Warehouse" data-i18n="dashboard.statuses.rejected_by_warehouse">Rejected by Warehouse</option>
+    </select></div>
+    <div><button class="btn-filter" onclick="applyFilter()" data-i18n="dashboard.filter.search_btn">Search</button><button class="btn-clear" onclick="clearFilter()" data-i18n="dashboard.filter.clear_btn">Clear</button></div>
+</div>
+
+<div id="requests-list">Loading requests...</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">X</button>
+        <div id="modal-content"></div>
+    </div>
+</div>
+
+<script src="/js/language.js"></script>
+<script>
+function printRequest(id) {
+    fetch('/approvals/details/' + id)
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(data) {
+            if (!data || !data.request) { alert('Could not load request details.'); return; }
+            var req   = data.request;
+            var items = data.items || [];
+            var lang  = 'ar'; // FORCED ARABIC
+            var isRTL = true; // FORCED ARABIC
+
+            function esc(v) {
+                if (v === null || v === undefined) return '';
+                return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
+            function fmtDate(v) { if (!v) return ''; return String(v).substring(0, 10); }
+            function fmtDateTime(v) {
+                if (!v) return '';
+                try {
+                    var d = new Date(v);
+                    if (isNaN(d.getTime())) return String(v).substring(0, 16);
+                    var yyyy = d.getFullYear();
+                    var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+                    var dd = ('0' + d.getDate()).slice(-2);
+                    var hh = ('0' + d.getHours()).slice(-2);
+                    var mi = ('0' + d.getMinutes()).slice(-2);
+                    return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + mi;
+                } catch (e) { return String(v).substring(0, 16); }
+            }
+
+            var acqDisplay = '';
+            if (req.acquisition_type === 'Warranty') {
+                acqDisplay = isRTL ? '????' : 'Warranty';
+                if (req.acquisition_sub_type) {
+                    var subMap = { 'System Warranty': isRTL ? '???? ??????' : 'System Warranty', 'Parts Warranty': isRTL ? '???? ??? ??? ??????' : 'Parts Warranty' };
+                    acqDisplay += ' - ' + (subMap[req.acquisition_sub_type] || req.acquisition_sub_type);
+                }
+                if (req.installation_date2) acqDisplay += (isRTL ? ' (?????: ' : ' (Install: ') + fmtDate(req.installation_date2) + ')';
+            } else if (req.acquisition_type === 'Service Contract') {
+                acqDisplay = isRTL ? '??? ?????' : 'Service Contract';
+                if (req.acquisition_sub_type) {
+                    var subMap2 = { 'UPA Contract': isRTL ? '??? ???? ?????? ??????' : 'UPA Contract', 'Direct Contract': isRTL ? '??? ?????' : 'Direct Contract' };
+                    acqDisplay += ' - ' + (subMap2[req.acquisition_sub_type] || req.acquisition_sub_type);
+                }
+                if (req.contract_number) acqDisplay += (isRTL ? ' (???: ' : ' (Contract: ') + req.contract_number + ')';
+            } else if (req.acquisition_type === 'Part Sales') acqDisplay = isRTL ? '??? ??? ????' : 'Part Sales';
+            else if (req.acquisition_type === 'Local Repair Parts') acqDisplay = isRTL ? '????? ????' : 'Local Repair Parts';
+            else if (req.acquisition_type === 'Tools') acqDisplay = isRTL ? '?????' : 'Tools';
+            else acqDisplay = esc(req.acquisition_type) || '-';
+
+            function scrapLabel(v) {
+                if (v === 'Y') return isRTL ? '?????' : 'Return';
+                if (v === 'N') return isRTL ? '????' : 'Scrap';
+                return '';
+            }
+
+            var MIN_ROWS = 7;
+            var totalRows = Math.max(MIN_ROWS, items.length);
+            var partsRows = '';
+            for (var i = 0; i < totalRows; i++) {
+                var item = items[i] || null;
+                var rowBg = (i % 2 === 1) ? 'style="background:#f5f7fa;"' : '';
+                if (item) {
+                    var scrap = scrapLabel(item.defective_status);
+                    var scrapCell = scrap
+                        ? '<td style="font-size:9px;font-weight:bold;color:#BA7517;padding:4px;border:0.4px solid #c5cdd8;text-align:center;">' + scrap + '</td>'
+                        : '<td style="padding:4px;border:0.4px solid #c5cdd8;"></td>';
+                    partsRows += '<tr ' + rowBg + '>' +
+                        '<td style="font-size:10px;color:#6b7a8d;padding:4px;border:0.4px solid #c5cdd8;text-align:center;">' + (i + 1) + '</td>' +
+                        '<td style="font-size:10px;padding:4px;border:0.4px solid #c5cdd8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' + esc(item.part_name) + '</td>' +
+                        '<td style="font-size:9.5px;font-family:\'Courier New\',monospace;padding:4px;border:0.4px solid #c5cdd8;">' + esc(item.part_number) + '</td>' +
+                        '<td style="font-size:10px;color:#6b7a8d;padding:4px;border:0.4px solid #c5cdd8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' + esc(item.po_number) + '</td>' +
+                        '<td style="font-size:10px;padding:4px;border:0.4px solid #c5cdd8;text-align:center;">' + (item.quantity || '') + '</td>' +
+                        '<td style="font-size:10px;color:#6b7a8d;padding:4px;border:0.4px solid #c5cdd8;text-align:center;">' + esc(item.warehouse_location) + '</td>' +
+                        '<td style="font-size:9.5px;font-family:\'Courier New\',monospace;padding:4px;border:0.4px solid #c5cdd8;">' + esc(item.addition_permit_number) + '</td>' + scrapCell + '</tr>';
+                } else {
+                    partsRows += '<tr ' + rowBg + '>' +
+                        '<td style="font-size:10px;color:#6b7a8d;padding:4px;border:0.4px solid #c5cdd8;text-align:center;">' + (i + 1) + '</td>' +
+                        '<td style="padding:4px;border:0.4px solid #c5cdd8;"></td><td style="padding:4px;border:0.4px solid #c5cdd8;"></td>' +
+                        '<td style="padding:4px;border:0.4px solid #c5cdd8;"></td><td style="padding:4px;border:0.4px solid #c5cdd8;"></td>' +
+                        '<td style="padding:4px;border:0.4px solid #c5cdd8;"></td><td style="padding:4px;border:0.4px solid #c5cdd8;"></td>' +
+                        '<td style="padding:4px;border:0.4px solid #c5cdd8;"></td></tr>';
+                }
+            }
+
+            var L = {
+                requestDetails: isRTL ? '?????? ?????' : 'Request Details',
+                orgCode: isRTL ? '??? ?????' : 'Organization Code',
+                orgName: isRTL ? '??? ?????' : 'Organization Name',
+                department: isRTL ? '?????' : 'Department',
+                requestDate: isRTL ? '????? ?????' : 'Request Date',
+                acquisitionType: isRTL ? '??? ?????' : 'Acquisition Type',
+                tempCustody: isRTL ? '???? ?????' : 'Temporary Custody',
+                yes: isRTL ? '???' : 'Yes',
+                no: isRTL ? '??' : 'No',
+                parts: isRTL ? '????? ????????' : 'Parts',
+                hPartName: isRTL ? '??? ??????' : 'Part Name',
+                hPartNumber: isRTL ? '??? ??????' : 'Part Number',
+                hPONumber: isRTL ? '??? ??? ??????' : 'PO Number',
+                hQty: isRTL ? '???' : 'QTY',
+                hLoc: isRTL ? '????' : 'Loc',
+                hAddPermit: isRTL ? '??? ???????' : 'Add. Permit',
+                hScrap: isRTL ? '??????' : 'Scrap',
+                notes: isRTL ? '???????' : 'Notes',
+                noNotes: isRTL ? '?? ???? ???????' : 'No notes added.',
+                dispatch: isRTL ? '?????' : 'Dispatch',
+                dispatchDate: isRTL ? '????? ?????' : 'Dispatch Date',
+                dispatchPermit: isRTL ? '??? ??? ?????' : 'Dispatch Permit Number',
+                receivingEng: isRTL ? '????? ???????' : 'Receiving Engineer',
+                defReturn: isRTL ? '????? ??????' : 'Defective Return',
+                returnDate: isRTL ? '????? ???????' : 'Return Date',
+                addPermitNo: isRTL ? '??? ??? ???????' : 'Addition Permit Number',
+                engSig: isRTL ? '????? ???????' : 'Engineer Signature',
+                signatures: isRTL ? '????????' : 'Signatures',
+                sigRequester: isRTL ? '???? ?????' : 'Requester',
+                sigDeptManager: isRTL ? '???? ?????' : 'Dept Manager',
+                sigService: isRTL ? '????? ???????' : 'Service',
+                sigFinance: isRTL ? '??????? ???????' : 'Finance',
+                sigWarehouse: isRTL ? '??????' : 'Warehouse',
+                footer: isRTL ? 'Spare Parts System - Medical Technology' : 'Medical Technology  |  Spare Parts System'
+            };
+
+            var now = new Date();
+            var printedAt = fmtDate(now.toISOString()) + ', ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            var branchDisplay = req.branch === 'Alex' ? (isRTL ? '??????????' : 'Alexandria') : (isRTL ? '???????' : 'Cairo');
+
+            function sigCell(label, name, date, fullWidth) {
+                var span = fullWidth ? 'colspan="2"' : '';
+                return '<td ' + span + ' style="border:0.4px solid #c5cdd8;padding:4px 6px;vertical-align:top;">' +
+                    '<div style="font-size:9.5px;color:#6b7a8d;margin-bottom:2px;">' + label + '</div>' +
+                    '<div style="font-size:10px;font-weight:bold;">' + esc(name || '') + '</div>' +
+                    '<div style="font-size:9.5px;color:#6b7a8d;margin-top:1px;">' + fmtDate(date) + '</div></td>';
+            }
+            function sectionTitle(text) {
+                return '<div style="font-size:8px;font-weight:bold;color:#6b7a8d;letter-spacing:0.06em;text-transform:uppercase;border-bottom:0.5px solid #c5cdd8;padding-bottom:3px;margin-bottom:5px;margin-top:8px;">' + text + '</div>';
+            }
+
+            var notesCombined = '';
+            if (req.notes && String(req.notes).trim() !== '') notesCombined += esc(req.notes);
+            if (req.service_approval_notes && String(req.service_approval_notes).trim() !== '') notesCombined += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #ccc;"><b style="color:#1a3a5c;">?? Service Notes:</b> ' + esc(req.service_approval_notes) + '</div>';
+            if (req.finance_approval_notes && String(req.finance_approval_notes).trim() !== '') notesCombined += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #ccc;"><b style="color:#1e6b3c;">?? Finance Notes:</b> ' + esc(req.finance_approval_notes) + '</div>';
+            if (req.warehouse_approval_notes && String(req.warehouse_approval_notes).trim() !== '') notesCombined += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #ccc;"><b style="color:#6c3483;">?? Warehouse Notes:</b> ' + esc(req.warehouse_approval_notes) + '</div>';
+            if (notesCombined === '') notesCombined = L.noNotes;
+
+            var outsideHoursHtml = '';
+            if (req.out_of_hours_release || req.out_of_hours_return) {
+                outsideHoursHtml = '<div style="border:0.4px solid #e0a84c;background:#fff8e1;border-radius:4px;padding:5px 8px;font-size:10px;color:#8b5a00;min-height:22px;">';
+                outsideHoursHtml += '<b>?? Warehouse access outside operating hours</b>';
+                outsideHoursHtml += '<div style="margin-top:4px;"><b>' + (isRTL ? '1. ?????:' : '1. Part Release:') + '</b> ' + (req.out_of_hours_release ? (isRTL ? '???' : 'Yes') : (isRTL ? '??' : 'No')) + (req.out_of_hours_release && req.out_of_hours_release_datetime ? ' � <b>' + esc(fmtDateTime(req.out_of_hours_release_datetime)) + '</b>' : '') + '</div>';
+                outsideHoursHtml += '<div style="margin-top:2px;"><b>' + (isRTL ? '2. ???????:' : '2. Part Return:') + '</b> ' + (req.out_of_hours_return ? (isRTL ? '???' : 'Yes') : (isRTL ? '??' : 'No')) + (req.out_of_hours_return && req.out_of_hours_return_datetime ? ' � <b>' + esc(fmtDateTime(req.out_of_hours_return_datetime)) + '</b>' : '') + '</div>';
+                outsideHoursHtml += '</div>';
+            }
+
+            var dir = isRTL ? 'rtl' : 'ltr';
+            var html = '<!DOCTYPE html><html lang="' + lang + '" dir="' + dir + '"><head><meta charset="UTF-8"/>' +
+                '<title>Spare Parts Request #' + req.id + '</title>' +
+                '<style>' +
+                '*{box-sizing:border-box;margin:0;padding:0;}' +
+                'body{font-family:Arial,Tahoma,sans-serif;font-size:10pt;color:#1e2a38;background:#fff;padding:14mm;}' +
+                '.no-print{text-align:center;margin-bottom:16px;}' +
+                '.no-print button{background:#1a3a5c;color:white;border:none;padding:10px 28px;border-radius:6px;font-size:13px;cursor:pointer;}' +
+                'table{width:100%;border-collapse:collapse;}' +
+                '.parts-table{table-layout:fixed;}' +
+                '.parts-table th{font-size:8.5pt;font-weight:bold;color:#6b7a8d;background:#f5f7fa;padding:3px 4px;border:0.4pt solid #c5cdd8;border-bottom:0.8pt solid #1a3a5c;vertical-align:middle;}' +
+                '.dr-table th{font-size:8.5pt;font-weight:bold;color:#6b7a8d;background:#f5f7fa;padding:3px 6px;border:0.4pt solid #c5cdd8;border-bottom:0.6pt solid #1a3a5c;text-align:' + (isRTL ? 'right' : 'left') + ';width:33.3%;}' +
+                '.footer{border-top:0.5pt solid #c5cdd8;padding-top:5px;margin-top:8px;display:flex;justify-content:space-between;font-size:10pt;color:#6b7a8d;}' +
+                '@media print{.no-print{display:none;}body{padding:10mm;}@page{size:A4;margin:10mm;}}' +
+                '</style></head><body>' +
+                '<div class="no-print"><button onclick="window.print()">?? ' + (isRTL ? '????? / ??? ?? PDF' : 'Print / Save as PDF') + '</button></div>' +
+                '<div style="border-bottom:1.5pt solid #1a3a5c;padding-bottom:6px;margin-bottom:8px;">' +
+                '<div style="font-size:16pt;font-weight:bold;">' + (isRTL ? '??? ??? ??? ???? ' : 'Spare Parts Request ') + '<span style="color:#378ADD;">#' + req.id + '</span></div>' +
+                '<div style="font-size:10pt;color:#6b7a8d;margin-top:2px;">' + fmtDate(req.request_date) + ' &nbsp;|&nbsp; ' + (isRTL ? '?????: ' : 'Branch: ') + branchDisplay + '</div></div>' +
+                sectionTitle(L.requestDetails) +
+                '<table style="border-collapse:collapse;">' +
+                '<tr><td style="font-size:10px;color:#6b7a8d;padding:3px 5px;border:0.4px solid #c5cdd8;width:18%;">' + L.orgCode + '</td><td style="font-size:10px;font-weight:bold;padding:3px 5px;border:0.4px solid #c5cdd8;width:32%;">' + esc(req.organization_code) + '</td><td style="font-size:10px;color:#6b7a8d;padding:3px 5px;border:0.4px solid #c5cdd8;width:18%;">' + L.requestDate + '</td><td style="font-size:10px;font-weight:bold;padding:3px 5px;border:0.4px solid #c5cdd8;width:32%;">' + fmtDate(req.request_date) + '</td></tr>' +
+                '<tr><td style="font-size:10px;color:#6b7a8d;padding:3px 5px;border:0.4px solid #c5cdd8;">' + L.orgName + '</td><td style="font-size:10px;font-weight:bold;padding:3px 5px;border:0.4px solid #c5cdd8;">' + esc(req.organization_name) + '</td><td style="font-size:10px;color:#6b7a8d;padding:3px 5px;border:0.4px solid #c5cdd8;">' + L.department + '</td><td style="font-size:10px;font-weight:bold;padding:3px 5px;border:0.4px solid #c5cdd8;">' + esc(req.department_name) + '</td></tr>' +
+                '<tr><td style="font-size:10px;color:#6b7a8d;padding:3px 5px;border:0.4px solid #c5cdd8;">' + L.acquisitionType + '</td><td style="font-size:10px;font-weight:bold;padding:3px 5px;border:0.4px solid #c5cdd8;">' + acqDisplay + '</td><td style="font-size:10px;color:#6b7a8d;padding:3px 5px;border:0.4px solid #c5cdd8;">' + L.tempCustody + '</td><td style="font-size:10px;font-weight:bold;padding:3px 5px;border:0.4px solid #c5cdd8;">' + (req.temporary_custody ? L.yes : L.no) + '</td></tr>' +
+                '</table>' +
+                sectionTitle(L.parts) +
+                '<table class="parts-table"><colgroup><col style="width:3.2%"><col style="width:14.8%"><col style="width:14.8%"><col style="width:26.5%"><col style="width:4.2%"><col style="width:5.5%"><col style="width:11.5%"><col style="width:6.5%"></colgroup>' +
+                '<thead><tr><th style="text-align:center;">#</th><th style="text-align:' + (isRTL ? 'right' : 'left') + ';">' + L.hPartName + '</th><th style="text-align:' + (isRTL ? 'right' : 'left') + ';">' + L.hPartNumber + '</th><th style="text-align:' + (isRTL ? 'right' : 'left') + ';">' + L.hPONumber + '</th><th style="text-align:center;">' + L.hQty + '</th><th style="text-align:center;">' + L.hLoc + '</th><th style="text-align:' + (isRTL ? 'right' : 'left') + ';">' + L.hAddPermit + '</th><th style="text-align:center;">' + L.hScrap + '</th></tr></thead>' +
+                '<tbody>' + partsRows + '</tbody></table>' +
+                sectionTitle(L.notes) + '<div style="border:0.4px solid #c5cdd8;border-radius:4px;padding:5px 8px;font-size:10px;color:#6b7a8d;min-height:22px;">' + notesCombined + '</div>' +
+                (outsideHoursHtml ? sectionTitle('Warehouse Access Outside Hours') + outsideHoursHtml : '') +
+                sectionTitle(L.dispatch) + '<table style="margin-bottom:4px;"><tr>' +
+                '<td style="width:33.3%;border:0.4px solid #c5cdd8;padding:5px 6px;"><div style="font-size:9.5px;color:#6b7a8d;margin-bottom:2px;">' + L.dispatchDate + '</div><div style="font-size:10px;font-weight:bold;">' + (fmtDate(req.dispatch_date) || '') + '</div></td>' +
+                '<td style="width:33.3%;border:0.4px solid #c5cdd8;padding:5px 6px;"><div style="font-size:9.5px;color:#6b7a8d;margin-bottom:2px;">' + L.dispatchPermit + '</div><div style="font-size:10px;font-weight:bold;">' + esc(req.dispatch_permit_number) + '</div></td>' +
+                '<td style="width:33.3%;border:0.4px solid #c5cdd8;padding:5px 6px;"><div style="font-size:9.5px;color:#6b7a8d;margin-bottom:2px;">' + L.receivingEng + '</div><div style="font-size:10px;font-weight:bold;">' + esc(req.receiving_engineer) + '</div></td>' +
+                '</tr></table>' +
+                sectionTitle(L.defReturn) + '<table class="dr-table" style="table-layout:fixed;"><thead><tr><th>' + L.returnDate + '</th><th>' + L.addPermitNo + '</th><th>' + L.engSig + '</th></tr></thead><tbody>' +
+                '<tr style="height:25px;"><td style="border:0.4px solid #c5cdd8;padding:4px 6px;font-size:10px;font-weight:bold;">' + (fmtDate(req.defective_return_date) || '') + '</td><td style="border:0.4px solid #c5cdd8;padding:4px 6px;font-size:10px;font-weight:bold;">' + esc(req.addition_permit_number) + '</td><td style="border:0.4px solid #c5cdd8;padding:4px 6px;font-size:10px;font-weight:bold;">' + esc(req.engineer_signature) + '</td></tr>' +
+                '<tr style="height:25px;background:#f5f7fa;"><td style="border:0.4px solid #c5cdd8;padding:4px 6px;"></td><td style="border:0.4px solid #c5cdd8;padding:4px 6px;"></td><td style="border:0.4px solid #c5cdd8;padding:4px 6px;"></td></tr>' +
+                '<tr style="height:25px;"><td style="border:0.4px solid #c5cdd8;padding:4px 6px;"></td><td style="border:0.4px solid #c5cdd8;padding:4px 6px;"></td><td style="border:0.4px solid #c5cdd8;padding:4px 6px;"></td></tr>' +
+                '</tbody></table>' +
+                sectionTitle(L.signatures) + '<table><tr>' +
+                sigCell(L.sigRequester, req.requester_signature, req.requester_signature_date) +
+                sigCell(L.sigDeptManager, req.dept_manager_approved_by, req.dept_manager_approved_date) +
+                '</tr><tr>' +
+                sigCell(L.sigService, req.service_signature || req.manager_approved_service_signature, req.service_signature_date || req.manager_approved_service_date) +
+                sigCell(L.sigFinance, req.finance_signature || req.manager_approved_finance_signature, req.finance_signature_date || req.manager_approved_finance_date) +
+                '</tr><tr>' +
+                sigCell(L.sigWarehouse, req.warehouse_signature || req.engineer_signature, req.warehouse_signature_date, true) +
+                '</tr></table>' +
+                '<div class="footer"><span>' + L.footer + '</span><span>' + (isRTL ? '????: ' : 'Printed: ') + printedAt + '</span></div>' +
+                '</body></html>';
+
+            var win = window.open('', '_blank');
+            if (!win) { alert(isRTL ? '???? ?????? ???????? ???????? ?????? ???????.' : 'Please allow pop-ups to print the report.'); return; }
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(function() { win.print(); }, 300);
+        })
+        .catch(function(err) { console.error('Print error:', err); alert('Error loading request: ' + err.message); });
+}
+
+var STEPS = ['Service', 'Finance', 'Warehouse'];
+var allRequests = [];
+
+function formatDate(d) { if (!d) return '-'; return String(d).substring(0,10); }
+function sigWithDate(sig, date) { if (!sig) return '-'; return sig + (date ? ' (' + formatDate(date) + ')' : ''); }
+
+function renderNotesHtml(req) {
+    var esc = function(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    };
+    var html = '';
+    if (req.notes && String(req.notes).trim() !== '') html += esc(req.notes);
+    if (req.service_approval_notes && String(req.service_approval_notes).trim() !== '') {
+        html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ccc;"><b style="color:#1a3a5c;">📝 Service Notes:</b> ' + esc(req.service_approval_notes) + '</div>';
+    }
+    if (req.finance_approval_notes && String(req.finance_approval_notes).trim() !== '') {
+        html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ccc;"><b style="color:#1e6b3c;">💵 Finance Notes:</b> ' + esc(req.finance_approval_notes) + '</div>';
+    }
+    if (req.warehouse_approval_notes && String(req.warehouse_approval_notes).trim() !== '') {
+        html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ccc;"><b style="color:#6c3483;">📦 Warehouse Notes:</b> ' + esc(req.warehouse_approval_notes) + '</div>';
+    }
+    if (html === '') return '<div class="notes-display">' + translate('common.no_notes') + '</div>';
+    return '<div class="notes-display">' + html + '</div>';
+}
+
+function renderOutsideHoursHtml(req) {
+    if (!req.out_of_hours_release && !req.out_of_hours_return) return '';
+    var esc = function(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    };
+    function fmtDateTime(v) {
+        if (!v) return '-';
+        try {
+            var d = new Date(v);
+            if (isNaN(d.getTime())) return String(v).substring(0, 16);
+            var yyyy = d.getFullYear();
+            var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+            var dd = ('0' + d.getDate()).slice(-2);
+            var hh = ('0' + d.getHours()).slice(-2);
+            var mi = ('0' + d.getMinutes()).slice(-2);
+            return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + mi;
+        } catch (e) { return String(v).substring(0, 16); }
+    }
+    var html = '<div style="background:#fff8e1;border:1px solid #ffcc80;border-radius:6px;padding:12px;margin-top:12px;">';
+    html += '<b style="color:#8b5a00;">⚠️ Warehouse access outside operating hours</b>';
+    html += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e0a84c;">';
+    html += '<b>1. Part Release:</b> ' + (req.out_of_hours_release ? '✅ Yes' : '❌ No');
+    if (req.out_of_hours_release && req.out_of_hours_release_datetime) {
+        html += ' &nbsp;—&nbsp; <b>' + esc(fmtDateTime(req.out_of_hours_release_datetime)) + '</b>';
+    }
+    html += '</div>';
+    html += '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #e0a84c;">';
+    html += '<b>2. Part Return:</b> ' + (req.out_of_hours_return ? '✅ Yes' : '❌ No');
+    if (req.out_of_hours_return && req.out_of_hours_return_datetime) {
+        html += ' &nbsp;—&nbsp; <b>' + esc(fmtDateTime(req.out_of_hours_return_datetime)) + '</b>';
+    }
+    html += '</div></div>';
+    return html;
+}
+
+function renderDeptManagerSignature(req) {
+    var sig = req.dept_manager_approved_by;
+    var date = req.dept_manager_approved_date;
+    var isAlex = (req.branch === 'Alex');
+    var hasSig = sig && String(sig).trim() !== '';
+    if (hasSig) return sig + (date ? ' (' + formatDate(date) + ')' : '');
+    if (isAlex) return '<span style="color:#8b1a1a;font-weight:bold;">⚠️ ' + translate('common.not_signed') + '</span>';
+    return '-';
+}
+
+function getStepIndex(status) {
+    if (status === 'Fulfilled') return 3;
+    if (status === 'Pending Warehouse') return 2;
+    if (status === 'Pending Finance') return 1;
+    return 0;
+}
+function isRejected(status) { return status && status.indexOf('Rejected') !== -1; }
+
+function buildStatusBar(status) {
+    var doneIndex = getStepIndex(status);
+    var rejected = isRejected(status);
+    var html = '<div class="status-bar">';
+    for (var i = 0; i < STEPS.length; i++) {
+        var isDone = i < doneIndex;
+        var isActive = i === doneIndex && !rejected && status !== 'Fulfilled';
+        var isRej = rejected && i === doneIndex;
+        if (i > 0) html += '<div class="step-line' + (isDone ? ' done' : '') + '"></div>';
+        var circleClass = (isDone ? ' done' : isRej ? ' rejected' : isActive ? ' active' : '');
+        var labelClass = (isDone ? ' done' : isRej ? ' rejected' : isActive ? ' active' : '');
+        var circleContent = isDone ? '✓' : '';
+        html += '<div class="step"><div class="step-circle' + circleClass + '">' + circleContent + '</div>' +
+                '<div class="step-label' + labelClass + '">' + STEPS[i] + '</div></div>';
+    }
+    return html + '</div>';
+}
+
+function buildItemsTable(items) {
+    if (!items || items.length === 0) {
+        return '<table><thead><tr><th>#</th><th>' + translate('new_request.part_name') + '</th><th>' + translate('new_request.part_number') + '</th><th>' + translate('new_request.po_number') + '</th><th>' + translate('new_request.qty') + '</th><th>' + translate('new_request.warehouse_location') + '</th><th>' + translate('new_request.scrap') + '</th></tr></thead><tbody><tr><td colspan="7" style="text-align:center;color:#888">' + translate('common.no_parts') + '</td></tr></tbody></table>';
+    }
+    var html = '<table><thead><tr><th>#</th><th>' + translate('new_request.part_name') + '</th><th>' + translate('new_request.part_number') + '</th><th>' + translate('new_request.po_number') + '</th><th>' + translate('new_request.qty') + '</th><th>' + translate('new_request.warehouse_location') + '</th><th>' + translate('new_request.scrap') + '</th></tr></thead><tbody>';
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var def = (item.defective_status === 'Y') ? (translate('new_request.return') || 'Return') : ((item.defective_status === 'N') ? translate('new_request.scrap') : '-');
+        html += '<tr><td style="text-align:center">' + (item.line_number || (i+1)) + '</td><td>' + (item.part_name || '-') + '</td><td>' + (item.part_number || '-') + '</td><td>' + (item.po_number || '-') + '</td><td style="text-align:center">' + (item.quantity || '-') + '</td><td>' + (item.warehouse_location || '-') + '</td><td style="text-align:center">' + def + '</td></tr>';
+    }
+    html += '</tbody></table>';
+    return html;
+}
+
+function getAcquisitionDisplay(req) {
+    if (req.acquisition_type === 'Warranty') {
+        var text = req.acquisition_type;
+        if (req.acquisition_sub_type) text += ' - ' + req.acquisition_sub_type;
+        if (req.installation_date2) text += ' (Install: ' + formatDate(req.installation_date2) + ')';
+        return text;
+    } else if (req.acquisition_type === 'Service Contract') {
+        var text = req.acquisition_type;
+        if (req.acquisition_sub_type) text += ' - ' + req.acquisition_sub_type;
+        if (req.contract_number) text += ' (Contract: ' + req.contract_number + ')';
+        return text;
+    }
+    return req.acquisition_type || '-';
+}
+
+function buildSignaturesTable(req) {
+    var serviceCell = sigWithDate(req.service_signature, req.service_signature_date);
+    if (req.manager_approved_service_signature) {
+        serviceCell += '<div class="manager-sig-info"><b>✅ ' + translate('common.manager_override') + ' (' + translate('common.service') + '):</b> ' + sigWithDate(req.manager_approved_service_signature, req.manager_approved_service_date) + '<br><b>' + translate('common.comment') + ':</b> ' + (req.manager_approved_service_comment || '-') + '</div>';
+    }
+    var financeCell = sigWithDate(req.finance_signature, req.finance_signature_date);
+    if (req.manager_approved_finance_signature) {
+        financeCell += '<div class="manager-sig-info"><b>✅ ' + translate('common.manager_override') + ' (' + translate('common.finance') + '):</b> ' + sigWithDate(req.manager_approved_finance_signature, req.manager_approved_finance_date) + '<br><b>' + translate('common.comment') + ':</b> ' + (req.manager_approved_finance_comment || '-') + '</div>';
+    }
+    return '<table>' +
+        '<tr><td style="background:#f5f7fa;width:40%"><b>' + translate('common.requester') + '</b></td><td>' + sigWithDate(req.requester_signature, req.requester_signature_date) + '</td></tr>' +
+        '<tr><td style="background:#f5f7fa"><b>' + translate('common.dept_manager') + '</b></td><td>' + renderDeptManagerSignature(req) + '</td></tr>' +
+        '<tr><td style="background:#f5f7fa"><b>' + translate('common.service') + '</b></td><td>' + serviceCell + '</td></tr>' +
+        '<tr><td style="background:#f5f7fa"><b>' + translate('common.finance') + '</b></td><td>' + financeCell + '</td></tr>' +
+        '<tr><td style="background:#f5f7fa"><b>' + translate('common.warehouse') + '</b></td><td>' + sigWithDate(req.warehouse_signature, req.warehouse_signature_date) + '</td></tr>' +
+        '</table>';
+}
+
+function buildOverridePanel(req) {
+    var html = '';
+    if (req.status === 'Pending Service') {
+        html += '<div class="override-box">' +
+            '<h5 data-i18n="manager.override_service">✅ Sign instead of Service</h5>' +
+            '<p style="color:#888;font-size:12px;margin:0" data-i18n="manager.override_service_note">If Service is unavailable, you can sign on their behalf.</p>' +
+            '<input type="text" id="ov-service-sig-' + req.id + '" placeholder="Your full name (letters only)" readonly>' +
+            '<div class="auto-fill-note" data-i18n="common.auto_fill">💡 Your name has been auto-filled and cannot be edited</div>' +
+            '<textarea id="ov-service-comment-' + req.id + '" placeholder="' + translate('manager.comment') + '"></textarea>' +
+            '<button class="btn-override" onclick="overrideService(' + req.id + ')" data-i18n="manager.sign_as_service">Sign as Service</button>' +
+            '<div class="override-msg" id="ov-service-msg-' + req.id + '"></div>' +
+            '</div>';
+    }
+    if (req.status === 'Pending Service' || req.status === 'Pending Finance') {
+        html += '<div class="override-box">' +
+            '<h5 data-i18n="manager.override_finance">✅ Sign instead of Finance</h5>' +
+            '<p style="color:#888;font-size:12px;margin:0" data-i18n="manager.override_finance_note">If Finance is unavailable, you can sign on their behalf.</p>' +
+            '<input type="text" id="ov-finance-sig-' + req.id + '" placeholder="Your full name (letters only)" readonly>' +
+            '<div class="auto-fill-note" data-i18n="common.auto_fill">💡 Your name has been auto-filled and cannot be edited</div>' +
+            '<textarea id="ov-finance-comment-' + req.id + '" placeholder="' + translate('manager.comment') + '"></textarea>' +
+            '<button class="btn-override" onclick="overrideFinance(' + req.id + ')" data-i18n="manager.sign_as_finance">Sign as Finance</button>' +
+            '<div class="override-msg" id="ov-finance-msg-' + req.id + '"></div>' +
+            '</div>';
+    }
+    return html;
+}
+
+function overrideService(id) {
+    var sig = document.getElementById('ov-service-sig-' + id).value.trim();
+    var comment = document.getElementById('ov-service-comment-' + id).value.trim();
+    var msg = document.getElementById('ov-service-msg-' + id);
+    if (!sig) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + translate('common.required'); return; }
+    if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(sig)) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + translate('service_approval.letters_only'); return; }
+    if (!comment) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + translate('common.comment') + ' ' + translate('common.required'); return; }
+    fetch('/approvals/manager-override-service/' + id, {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'signature=' + encodeURIComponent(sig) + '&comment=' + encodeURIComponent(comment)
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) { msg.className = 'override-msg success'; msg.innerHTML = '✅ ' + translate('messages.request_approved') + ' ' + translate('common.please_wait'); setTimeout(function() { loadRequests(); }, 1500); }
+        else { msg.className = 'override-msg error'; msg.innerHTML = data.error || translate('common.error'); }
+    }).catch(function(err) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + err.message; });
+}
+
+function overrideFinance(id) {
+    var sig = document.getElementById('ov-finance-sig-' + id).value.trim();
+    var comment = document.getElementById('ov-finance-comment-' + id).value.trim();
+    var msg = document.getElementById('ov-finance-msg-' + id);
+    if (!sig) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + translate('common.required'); return; }
+    if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(sig)) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + translate('finance_approval.letters_only'); return; }
+    if (!comment) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + translate('common.comment') + ' ' + translate('common.required'); return; }
+    fetch('/approvals/manager-override-finance/' + id, {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'signature=' + encodeURIComponent(sig) + '&comment=' + encodeURIComponent(comment)
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) { msg.className = 'override-msg success'; msg.innerHTML = '✅ ' + translate('messages.request_approved') + ' ' + translate('common.please_wait'); setTimeout(function() { loadRequests(); }, 1500); }
+        else { msg.className = 'override-msg error'; msg.innerHTML = data.error || translate('common.error'); }
+    }).catch(function(err) { msg.className = 'override-msg error'; msg.innerHTML = translate('common.error') + ': ' + err.message; });
+}
+
+function loadRequests() {
+    fetch('/approvals/all')
+        .then(function(r) { return r.json(); })
+        .then(function(data) { allRequests = data; renderList(data); autoFillSignature(); })
+        .catch(function(err) { console.error(err); });
+}
+
+function applyFilter() {
+    var name = document.getElementById('filter_name').value.toLowerCase();
+    var dept = document.getElementById('filter_dept').value;
+    var from = document.getElementById('filter_from').value;
+    var to = document.getElementById('filter_to').value;
+    var status = document.getElementById('filter_status').value;
+    var filtered = allRequests.filter(function(req) {
+        var matchName = !name || ((req.customer_name && req.customer_name.toLowerCase().indexOf(name)!==-1) || (req.organization_name && req.organization_name.toLowerCase().indexOf(name)!==-1));
+        var matchDept = !dept || req.department_name === dept;
+        var matchStatus = !status || req.status === status;
+        var reqDate = req.request_date ? String(req.request_date).substring(0,10) : '';
+        return matchName && matchDept && matchStatus && (!from || reqDate >= from) && (!to || reqDate <= to);
+    });
+    renderList(filtered);
+    autoFillSignature();
+}
+
+function clearFilter() {
+    document.getElementById('filter_name').value = '';
+    document.getElementById('filter_dept').value = '';
+    document.getElementById('filter_from').value = '';
+    document.getElementById('filter_to').value = '';
+    document.getElementById('filter_status').value = '';
+    renderList(allRequests);
+    autoFillSignature();
+}
+
+function renderList(data) {
+    var el = document.getElementById('requests-list');
+    if (!data.length) { el.innerHTML = '<div class="card"><p>' + translate('dashboard.no_requests') + '</p></div>'; return; }
+    var html = '';
+    data.forEach(function(req) {
+        var rejectHtml = '';
+        if (req.dept_manager_rejected_reason) {
+            rejectHtml = '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_dept_manager') + ':</b> ' + (req.dept_manager_rejected_reason || '') + '<br><b>' + translate('common.requester') + ':</b> ' + (req.dept_manager_rejected_by || '-') + '<br><b>' + translate('common.date') + ':</b> ' + formatDate(req.dept_manager_rejected_date) + '</div>';
+        } else if (req.status === 'Rejected by Service') {
+            rejectHtml = '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_service') + ':</b> ' + (req.service_rejection_reason || '') + '<br><b>' + translate('common.requester') + ':</b> ' + (req.service_rejection_signature || '-') + '<br><b>' + translate('common.date') + ':</b> ' + formatDate(req.service_rejection_date) + '</div>';
+        } else if (req.status === 'Rejected by Finance') {
+            rejectHtml = '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_finance') + ':</b> ' + (req.finance_rejection_reason || '') + '<br><b>' + translate('common.requester') + ':</b> ' + (req.finance_rejection_signature || '-') + '<br><b>' + translate('common.date') + ':</b> ' + formatDate(req.finance_rejection_date) + '</div>';
+        } else if (req.status === 'Rejected by Warehouse') {
+            rejectHtml = '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_warehouse') + ':</b> ' + (req.warehouse_rejection_reason || '') + '<br><b>' + translate('common.requester') + ':</b> ' + (req.warehouse_rejection_signature || '-') + '<br><b>' + translate('common.date') + ':</b> ' + formatDate(req.warehouse_rejection_date) + '</div>';
+        }
+        var displayDate = req.request_date ? formatDate(req.request_date) : '';
+        html += `
+            <div class="card">
+                <h3>${translate('common.request')} ${displayDate} - #${req.id} - ${req.customer_name}</h3>
+                <p><b>${translate('common.date')}:</b> ${displayDate} | <b>${translate('common.department')}:</b> ${req.department_name || '-'} | <b>${translate('common.status')}:</b> ${req.status}</p>
+                ${buildStatusBar(req.status)}
+                ${rejectHtml}
+                ${buildOverridePanel(req)}
+                <button class="btn-view" onclick="viewRequest(${req.id})" data-i18n="manager.view_full">View Full Request</button>
+                <button class="btn-print" onclick="printRequest(${req.id})">🖨️ طباعة A4</button>
+            </div>
+        `;
+    });
+    el.innerHTML = html;
+    if (typeof applyTranslations === 'function') applyTranslations();
+}
+
+function viewRequest(id) {
+    fetch('/approvals/details/' + id)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var req = data.request;
+            var items = data.items;
+            var acqDisplay = getAcquisitionDisplay(req);
+            var rejectHtml = '';
+            if (req.dept_manager_rejected_reason) rejectHtml += '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_dept_manager') + ':</b> ' + req.dept_manager_rejected_reason + '</div>';
+            if (req.service_rejection_reason) rejectHtml += '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_service') + ':</b> ' + req.service_rejection_reason + '</div>';
+            if (req.finance_rejection_reason) rejectHtml += '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_finance') + ':</b> ' + req.finance_rejection_reason + '</div>';
+            if (req.warehouse_rejection_reason) rejectHtml += '<div class="reject-details"><b>' + translate('dashboard.statuses.rejected_by_warehouse') + ':</b> ' + req.warehouse_rejection_reason + '</div>';
+
+            var modalContent = `
+                <h2 style="color:#1a3a5c">${translate('common.request')} #${req.id}</h2>
+                ${buildStatusBar(req.status)}
+                ${rejectHtml}
+                <h4>${translate('common.request_details')}</h4>
+                <table>
+                    <tr><td style="background:#f5f7fa;width:40%"><b>${translate('common.organization_code')}</b></td><td>${req.organization_code || '-'}</td></tr>
+                    <tr><td style="background:#f5f7fa"><b>${translate('common.organization_name')}</b></td><td>${req.organization_name || '-'}</td></tr>
+                    <tr><td style="background:#f5f7fa"><b>${translate('common.department')}</b></td><td>${req.department_name || '-'}</td></tr>
+                    <tr><td style="background:#f5f7fa"><b>${translate('common.acquisition_type')}</b></td><td>${acqDisplay}</td></tr>
+                    <tr><td style="background:#f5f7fa"><b>${translate('common.request_date')}</b></td><td>${formatDate(req.request_date)}</td></tr>
+                    <tr><td style="background:#f5f7fa"><b>${translate('common.temporary_custody')}</b></td><td>${req.temporary_custody ? 'Yes' : 'No'}</td></tr>
+                    <tr><td style="background:#f5f7fa"><b>${translate('common.status')}</b></td><td>${req.status}</td></tr>
+                </table>
+                <h4>${translate('common.parts')}</h4>
+                ${buildItemsTable(items)}
+                <h4>${translate('common.notes')}</h4>
+                ${renderNotesHtml(req)}
+                ${renderOutsideHoursHtml(req)}
+                <h4>${translate('common.signatures')}</h4>
+                ${buildSignaturesTable(req)}
+            `;
+            document.getElementById('modal-content').innerHTML = modalContent;
+            document.getElementById('modal').style.display = 'block';
+        })
+        .catch(function(err) { console.error(err); });
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+function autoFillSignature() {
+    fetch('/api/user')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data && data.name) {
+                document.querySelectorAll('input[id^="ov-service-sig-"]').forEach(function(f) { f.value = data.name; });
+                document.querySelectorAll('input[id^="ov-finance-sig-"]').forEach(function(f) { f.value = data.name; });
+            }
+        })
+        .catch(function(err) { console.log('Could not auto-fill signature:', err); });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var tries = 0;
+    var waitForLanguage = setInterval(function() {
+        tries++;
+        var ready = typeof translations !== 'undefined' && translations[currentLanguage] && Object.keys(translations[currentLanguage]).length > 0;
+        if (ready || tries > 40) { clearInterval(waitForLanguage); loadRequests(); }
+    }, 100);
+});
+</script>
+</body>
+</html>
